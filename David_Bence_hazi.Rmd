@@ -43,38 +43,51 @@ library(dplyr)
 
 HTML beolvastatás:
 ```{r}
-page = 0
-html <- paste('https://www.booking.com/searchresults.en-gb.html?label=gog235jc-1DCAMoZzjxAkgJWANoZ4gBAZgBCbgBB8gBDdgBA-gBAfgBAogCAagCA7gCkPrjjAbAAgHSAiQ3MzBmM2RlYS0xMDdhLTQ1YWYtYjk2Ny1iZWRjMzc0OGY4ZjDYAgTgAgE&sid=330c997fc1fe0d31c0531cb768618e5c&aid=356980&lang=en-gb&sb=1&src_elem=sb&error_url=https%3A%2F%2Fwww.booking.com%2Fsearchresults.en-gb.html%3Faid%3D356980%3Blabel%3Dgog235jc-1DCAMoZzjxAkgJWANoZ4gBAZgBCbgBB8gBDdgBA-gBAfgBAogCAagCA7gCkPrjjAbAAgHSAiQ3MzBmM2RlYS0xMDdhLTQ1YWYtYjk2Ny1iZWRjMzc0OGY4ZjDYAgTgAgE%3Bsid%3D330c997fc1fe0d31c0531cb768618e5c%3Btmpl%3Dsearchresults%3Bac_click_type%3Db%3Bac_position%3D0%3Bcheckin_month%3D12%3Bcheckin_monthday%3D20%3Bcheckin_year%3D2021%3Bcheckout_month%3D12%3Bcheckout_monthday%3D26%3Bcheckout_year%3D2021%3Bclass_interval%3D1%3Bdest_id%3D-850553%3Bdest_type%3Dcity%3Bdtdisc%3D0%3Bfrom_sf%3D1%3Bgroup_adults%3D1%3Bgroup_children%3D0%3Biata%3DBUD%3Binac%3D0%3Bindex_postcard%3D0%3Blabel_click%3Dundef%3Bno_rooms%3D1%3Boffset%3D0%3Bpostcard%3D0%3Braw_dest_type%3Dcity%3Broom1%3DA%3Bsb_price_type%3Dtotal%3Bsearch_selected%3D1%3Bshw_aparth%3D1%3Bslp_r_match%3D0%3Bsrc%3Dsearchresults%3Bsrc_elem%3Dsb%3Bsrpvid%3D287e619cfd790021%3Bss%3DBudapest%252C%2BPest%252C%2BHungary%3Bss_all%3D0%3Bss_raw%3DBudapest%3Bssb%3Dempty%3Bsshis%3D0%3Bssne%3DHungary%3Bssne_untouched%3DHungary%3Btop_ufis%3D1%3Bsig%3Dv11ptSU9-k%26%3B&ss=Budapest&is_ski_area=0&ssne=Budapest&ssne_untouched=Budapest&city=-850553&checkin_year=2021&checkin_month=12&checkin_monthday=20&checkout_year=2021&checkout_month=12&checkout_monthday=26&group_adults=1&group_children=0&no_rooms=1&from_sf=1&order=price&offset=',as.character(page),sep="")
+html_base <- 'https://www.booking.com/searchresults.en-gb.html?label=gog235jc-1DCAMoZzjxAkgJWANoZ4gBAZgBCbgBB8gBDdgBA-gBAfgBAogCAagCA7gCkPrjjAbAAgHSAiQ3MzBmM2RlYS0xMDdhLTQ1YWYtYjk2Ny1iZWRjMzc0OGY4ZjDYAgTgAgE&sid=330c997fc1fe0d31c0531cb768618e5c&aid=356980&lang=en-gb&sb=1&src_elem=sb&error_url=https%3A%2F%2Fwww.booking.com%2Fsearchresults.en-gb.html%3Faid%3D356980%3Blabel%3Dgog235jc-1DCAMoZzjxAkgJWANoZ4gBAZgBCbgBB8gBDdgBA-gBAfgBAogCAagCA7gCkPrjjAbAAgHSAiQ3MzBmM2RlYS0xMDdhLTQ1YWYtYjk2Ny1iZWRjMzc0OGY4ZjDYAgTgAgE%3Bsid%3D330c997fc1fe0d31c0531cb768618e5c%3Btmpl%3Dsearchresults%3Bac_click_type%3Db%3Bac_position%3D0%3Bcheckin_month%3D12%3Bcheckin_monthday%3D20%3Bcheckin_year%3D2021%3Bcheckout_month%3D12%3Bcheckout_monthday%3D26%3Bcheckout_year%3D2021%3Bclass_interval%3D1%3Bdest_id%3D-850553%3Bdest_type%3Dcity%3Bdtdisc%3D0%3Bfrom_sf%3D1%3Bgroup_adults%3D1%3Bgroup_children%3D0%3Biata%3DBUD%3Binac%3D0%3Bindex_postcard%3D0%3Blabel_click%3Dundef%3Bno_rooms%3D1%3Boffset%3D0%3Bpostcard%3D0%3Braw_dest_type%3Dcity%3Broom1%3DA%3Bsb_price_type%3Dtotal%3Bsearch_selected%3D1%3Bshw_aparth%3D1%3Bslp_r_match%3D0%3Bsrc%3Dsearchresults%3Bsrc_elem%3Dsb%3Bsrpvid%3D287e619cfd790021%3Bss%3DBudapest%252C%2BPest%252C%2BHungary%3Bss_all%3D0%3Bss_raw%3DBudapest%3Bssb%3Dempty%3Bsshis%3D0%3Bssne%3DHungary%3Bssne_untouched%3DHungary%3Btop_ufis%3D1%3Bsig%3Dv11ptSU9-k%26%3B&ss=Budapest&is_ski_area=0&ssne=Budapest&ssne_untouched=Budapest&city=-850553&checkin_year=2021&checkin_month=12&checkin_monthday=20&checkout_year=2021&checkout_month=12&checkout_monthday=26&group_adults=1&group_children=0&no_rooms=1&from_sf=1&order=price&offset='
 ```
 
 A honlapon egy hírdetéshez a következő attribútumok tartoznak [CSS selector]:
  - Hírdetés neve [._c445487e2]
  - Hírdetés ratingje [.bd528f9ea6]
  - Ár [._e885fdc12]
- - Más tagek [.eba89149fb]
+ - Más tagek [.eba89149fb] -> kerület megkapásához lesz használva
 
 
 
 Letöltés:
 ```{r}
+
+html<- paste(html_base,as.character(0),sep="")
+
+#Első ciklus (1. oldal letöltése)
 honlap <- read_html(html)
 
 hirdetes <- html_text(html_nodes(honlap, "._c445487e2"))
 rating <- html_text(html_nodes(honlap, ".bd528f9ea6")) %>% as.numeric()
+price <- html_text(html_nodes(honlap, "._e885fdc12")) %>% substr(5,30) %>% gsub(",","",.)
+kerulet <- html_text(html_nodes(honlap, ".eba89149fb")) %>% 
+  subset(. != "Show on map") %>% 
+  substr(1,3)
 
+
+#Többi oldal letöltése
+for (page in (1:30)){
+  page_num = page*25
+  html<- paste(html_base,as.character(page),sep="")
+  
+  honlap <- read_html(html)
+  
+  hirdetes <- rbind(html_text(html_nodes(honlap, "._c445487e2")),hirdetes)
+  rating <- html_text(html_nodes(honlap, ".bd528f9ea6")) %>% as.numeric() %>% rbind(rating)
+  price <- html_text(html_nodes(honlap, "._e885fdc12")) %>% substr(5,30) %>% gsub(",","",.) %>%
+    rbind(price)
+  kerulet <- html_text(html_nodes(honlap, ".eba89149fb")) %>% 
+    subset(. != "Show on map") %>% 
+    substr(1,3) %>% 
+    rbind(kerulet)
+}
+data = data.frame(hirdetes,rating,price,kerulet)
 
 ```
 
-```{r}
- honlap <- read_html(html)
-
- terulet <- html_text(html_nodes(weblap, ".info1"))
- terulet <- as.numeric(substr(terulet, 1, str_length(terulet)-3))
- ar  <- html_text(html_nodes(weblap, ".price"))
- ar <- as.numeric(substr(ar, 1,  str_locate(ar, " ")[ ,1]-1))
- telepules <- html_text(html_nodes(weblap, ".subcatid"))
- telepules <- gsub("\n    Eladó lakás, \n    ", "", telepules)
-  telepules <- gsub("\n    ", "", telepules)
-  balaton <- data.frame(terulet, ar, telepules)[1:16, ]
-```
 
