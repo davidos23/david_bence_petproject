@@ -31,7 +31,10 @@ A honlapon egy hírdetéshez a következő attribútumok tartoznak [CSS selector
 
 ### Szükséges package-k betöltése
 ```{r}
-library(tm)
+#Webscrapehez
+library(rvest)
+#dplyr ( %>% miatt)
+library(dplyr)
 ```
 
 
@@ -57,6 +60,8 @@ Letöltés:
 honlap <- read_html(html)
 
 hirdetes <- html_text(html_nodes(honlap, "._c445487e2"))
+rating <- html_text(html_nodes(honlap, ".bd528f9ea6")) %>% as.numeric()
+
 
 ```
 
