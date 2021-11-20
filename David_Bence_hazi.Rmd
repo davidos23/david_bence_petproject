@@ -31,6 +31,7 @@ A honlapon egy hírdetéshez a következő attribútumok tartoznak [CSS selector
 
 ### Szükséges package-k betöltése
 ```{r}
+install.packages('tm')
 library(tm)
 ```
 
