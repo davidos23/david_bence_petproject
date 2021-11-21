@@ -32,6 +32,7 @@ library(neuralnet)
 library(nnet)
 library(fastDummies)
 library(caret)
+
 ```
 
 ### Segédfüggvények definiálása

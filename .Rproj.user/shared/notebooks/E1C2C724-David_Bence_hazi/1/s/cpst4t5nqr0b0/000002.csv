@@ -1,2 +1,0 @@
-"0","heart_kesz <- dummy_cols(heart, remove_selected_columns = TRUE)"
-"0","heart_kesz <- sapply(heart_kesz, norm)"
