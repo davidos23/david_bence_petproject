@@ -25,19 +25,38 @@ A heart failure adatokat több országból gyűjtötték össze nekünk, az adat
 - régi csúcsérték (numerical) 
 - ST-görbe ?????? (kategórikus)
 - Szívbetegség - (1: beteg, 0 egészséges)
+
+Mi arra vállalkoztunk, hogy modellt építsünk a szívbetegség fennállásának eldöntésére.
+
 1) Töltsük be az adatot!
 ```{r}
 file_path <- "/Users/sbeni/suli/Reggelistat/PET-project/heart.csv"
 heart_failure <- read.csv(file_path)
 ```
 
-2) kakken
+2) A fa elkészítése
 ```{r}
 decision_tree <- rpart(HeartDisease~., data=heart_failure)
 rpart.plot(decision_tree)
-prp(decision_tree)
+#prp(decision_tree)
 ```
+Nézzük meg különböző 'cp (complexity paramter) ' értékek mellett
+*a cp érték megmutatj,a hogy mennyire szerteágató a döntési fánk
 
-
-
+0-ás cp mellett nagyon elágazó ábrát kapunk
+```{r}
+tree_0 <- rpart(HeartDisease~., data=heart_failure, cp=0)
+rpart.plot(tree_0)
+```
+0.01-es cp mellett a következő ábrát kapjuk. Itt már szemmel olvashatóbb a fa sűrűsége.
+```{r}
+tree_001 <- rpart(HeartDisease~., data=heart_failure, cp=0.01)
+rpart.plot(tree_001)
+```
+0.1-es cp mellett pedig gyakorlatilag csak az ST görbe alapján döntött
+```{r}
+tree_010 <- rpart(HeartDisease~., data=heart_failure, cp=0.1)
+rpart.plot(tree_010)
+```
+Használjuk föl a 'plotcp()' metódust, ami segít megtalálni az ideális cp értéket.
  
