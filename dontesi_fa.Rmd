@@ -5,9 +5,11 @@
 install.packages("rpart")
 install.packages("rpart.plot")
 install.packages("randomForest")
+install.packages("boot")
 library(rpart)
 library(rpart.plot)
 library(randomForest)
+library("boot")
 ```
 0) Adatok jellemzése
 Az adatot a https://www.kaggle.com/fedesoriano/heart-failure-prediction címről töltöttük le.
@@ -58,5 +60,53 @@ rpart.plot(tree_001)
 tree_010 <- rpart(HeartDisease~., data=heart_failure, cp=0.1)
 rpart.plot(tree_010)
 ```
-Használjuk föl a 'plotcp()' metódust, ami segít megtalálni az ideális cp értéket.
+Használjuk föl a 'plotcp()' metódust, ami segít megtalálni az ideális cp értéket (tree_0-ra).
+```{r}
+plotcp(tree_0, minline = TRUE)
+```
+Leolvasva a 0.0077-es érték a legjobb, de ezt kitudjuk nyerni másképp is.
+(ekvivalens : tree_0$cptable)
+```{r}
+printcp(tree_0)
+```
+
+```{r}
+cp.select <- function(big.tree) {
+  min.x <- which.min(big.tree$cptable[, 4]) #column 4 is xerror
+  for(i in 1:nrow(big.tree$cptable)) {
+    if(big.tree$cptable[i, 4] < big.tree$cptable[min.x, 4] + big.tree$cptable[min.x, 5]) 
+      return(big.tree$cptable[i, 1]) #column 5: xstd, column 1: cp 
+  }
+}
+
+opt_cp = cp.select(tree_0)
+```
+
+Modell sokaság legyártása
+```{r}
+get_random_indeces <- function(t_n, t_k, df){
+  "
+  t_n : number of desired rows for test data
+  t_k : number of maximum unique rows from df
+  note that t_k < = t_n
+  
+  this function gives random indeces for the testing data. This means if you use it, the testing data likely to have
+  same indeces.
+  "
+  if (t_k <= t_n){
+    rand_list = sample(1:t_k)
+    remain_list = sample(1:(t_n-t_k))
+    return(append(rand_list,remain_list))
+  }else{
+    return("Not well given inputs. Please check the function how to use it!")
+  }
+}
+```
+
+```{r}
+kakken = c(1,2,3,4,4,5,6)
+filtered = heart_failure[kakken,]
+```
+
+ 
  
