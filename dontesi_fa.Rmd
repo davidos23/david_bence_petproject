@@ -93,10 +93,13 @@ get_random_indeces <- function(t_n, t_k, df){
   this function gives random indeces for the testing data. This means if you use it, the testing data likely to have
   same indeces.
   "
-  if (t_k <= t_n){
+  if (t_k < t_n){
     rand_list = sample(1:t_k)
     remain_list = sample(1:(t_n-t_k))
-    return(append(rand_list,remain_list))
+    return(df[append(rand_list,remain_list),])
+  }else if(t_k == t_n){
+    rand_list = sample(1:t_n)
+    return (df[rand_list,])
   }else{
     return("Not well given inputs. Please check the function how to use it!")
   }
@@ -104,8 +107,9 @@ get_random_indeces <- function(t_n, t_k, df){
 ```
 
 ```{r}
-kakken = c(1,2,3,4,4,5,6)
-filtered = heart_failure[kakken,]
+t_n = 10
+t_k = 10
+filtered_df = get_random_indeces(t_n,t_k,heart_failure)
 ```
 
  
