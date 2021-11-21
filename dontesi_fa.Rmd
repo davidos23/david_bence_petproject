@@ -1,4 +1,43 @@
 ```{r}
-Döntési fa a heart failure adatokra
+#Döntési fa a heart failure adatokra
+```
+```{r}
+install.packages("rpart")
+install.packages("rpart.plot")
+install.packages("randomForest")
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+```
+0) Adatok jellemzése
+Az adatot a https://www.kaggle.com/fedesoriano/heart-failure-prediction címről töltöttük le.
+
+A heart failure adatokat több országból gyűjtötték össze nekünk, az adatstruktúra pedig 12 oszlopból áll. Nevesen
+- életkor(numerikus)
+- nem (M: male, F: female)
+- mellkasi fájdalom típusa (kategórikus)
+- nyugalmi vérnyomás (numerikus)
+- koleszterin mennyisége (numerikus)
+- éhomi vércukorszint (0-1)
+- nyugalmi elektrodiogram eredménye (kategórikus)
+- maximális szívdobbanás (numerikus)
+- Szív-koszorúér fájdalom mozgás hatására (0-1)
+- régi csúcsérték (numerical) 
+- ST-görbe ?????? (kategórikus)
+- Szívbetegség - (1: beteg, 0 egészséges)
+1) Töltsük be az adatot!
+```{r}
+file_path <- "/Users/sbeni/suli/Reggelistat/PET-project/heart.csv"
+heart_failure <- read.csv(file_path)
 ```
 
+2) kakken
+```{r}
+decision_tree <- rpart(HeartDisease~., data=heart_failure)
+rpart.plot(decision_tree)
+prp(decision_tree)
+```
+
+
+
+ 
