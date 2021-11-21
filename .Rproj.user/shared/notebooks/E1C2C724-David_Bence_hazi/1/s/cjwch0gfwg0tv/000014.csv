@@ -1,0 +1,440 @@
+"0"," kereszt_validacio <- trainControl(method=""cv"", number=10) "
+"0",""
+"0"," train(as.factor(HeartDisease)~., data=heart_kesz, trControl=kereszt_validacio, method=""glm"")"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"2","Warning in predict.lm(object, newdata, se.fit, scale = 1, type = if (type ==  :"
+"2","
+ "
+"2"," prediction from a rank-deficient fit may be misleading
+"
+"1","Generalized Linear Model"
+"1"," "
+"1","
+
+"
+"1","918"
+"1",""
+"1"," samples"
+"1","
+"
+"1"," 20"
+"1",""
+"1"," predictor"
+"1",""
+"1","
+"
+"1","  2"
+"1"," "
+"1","classes:"
+"1"," "
+"1","'0', '1'"
+"1"," "
+"1","
+"
+"1","
+"
+"1","No pre-processing
+"
+"1","Resampling:"
+"1"," "
+"1","Cross-Validated (10 fold)"
+"1"," "
+"1","
+"
+"1","Summary of sample sizes:"
+"1"," "
+"1","826, 826, 826, 826, 827, 826, ..."
+"1"," "
+"1","
+"
+"1","Resampling results"
+"1",":
+
+"
+"1",""
+"1","  Accuracy"
+"1","  Kappa    "
+"1","
+"
+"1","  0.863784"
+"1","  0.7232811"
+"1","
+"
+"1","
+"
+"1",""
+"0"," "
+"0"," hiperpar_grid<- expand.grid(layer1=0:3, layer2=0:2, layer3=0)"
+"0"," train(HeartDisease~., data=heart_kesz, trControl=kereszt_validacio, method=""neuralnet"", tuneGrid=hiperpar_grid)"
+"2","Warning in train.default(x, y, weights = w, ...) :"
+"2","
+ "
+"2"," You are trying to do regression and your outcome only has two possible values Are you trying to do classification? If so, use a 2 level factor as your outcome column.
+"
+"2","Warning:"
+"2"," model fit failed for Fold01: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold01: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," Algorithm did not converge in 1 of 1 repetition(s) within the stepmax.
+"
+"2","Warning:"
+"2"," predictions failed for Fold01: layer1=3, layer2=1, layer3=0 Error in cbind(1, pred) %*% weights[[num_hidden_layers + 1]] : 
+  requires numeric/complex matrix/vector arguments
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold01: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," Algorithm did not converge in 1 of 1 repetition(s) within the stepmax.
+"
+"2","Warning:"
+"2"," predictions failed for Fold01: layer1=1, layer2=2, layer3=0 Error in cbind(1, pred) %*% weights[[num_hidden_layers + 1]] : 
+  requires numeric/complex matrix/vector arguments
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold02: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold02: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold02: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold03: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold03: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold03: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold04: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold04: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold04: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold05: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold05: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold05: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold06: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold06: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold06: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold07: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold07: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold07: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold08: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold08: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold08: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," Algorithm did not converge in 1 of 1 repetition(s) within the stepmax.
+"
+"2","Warning:"
+"2"," predictions failed for Fold08: layer1=2, layer2=2, layer3=0 Error in cbind(1, pred) %*% weights[[num_hidden_layers + 1]] : 
+  requires numeric/complex matrix/vector arguments
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold09: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold09: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold09: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold10: layer1=0, layer2=0, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold10: layer1=0, layer2=1, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning:"
+"2"," model fit failed for Fold10: layer1=0, layer2=2, layer3=0 Error in method$fit(x = x, y = y, wts = wts, param = tuneValue, lev = obsLevels,  : 
+  the first layer must have at least one hidden unit
+
+"
+"2","Warning in nominalTrainWorkflow(x = x, y = y, wts = weights, info = trainInfo,  :"
+"2","
+ "
+"2"," There were missing values in resampled performance measures.
+"
+"2","Warning in train.default(x, y, weights = w, ...) :"
+"2","
+ "
+"2"," missing values found in aggregated results
+"
+"1","Neural Network"
+"1"," "
+"1","
+
+"
+"1","918"
+"1",""
+"1"," samples"
+"1","
+"
+"1"," 20"
+"1",""
+"1"," predictor"
+"1",""
+"1","
+"
+"1","
+"
+"1","No pre-processing
+"
+"1","Resampling:"
+"1"," "
+"1","Cross-Validated (10 fold)"
+"1"," "
+"1","
+"
+"1","Summary of sample sizes:"
+"1"," "
+"1","826, 826, 826, 826, 827, 826, ..."
+"1"," "
+"1","
+"
+"1","Resampling results"
+"1"," across tuning parameters"
+"1",":
+
+"
+"1",""
+"1","  layer1"
+"1","  layer2"
+"1","  RMSE     "
+"1","  Rsquared "
+"1","  MAE      "
+"1","
+"
+"1","  0     "
+"1","  0     "
+"1","        NaN"
+"1","        NaN"
+"1","        NaN"
+"1","
+"
+"1","  0     "
+"1","  1     "
+"1","        NaN"
+"1","        NaN"
+"1","        NaN"
+"1","
+"
+"1","  0     "
+"1","  2     "
+"1","        NaN"
+"1","        NaN"
+"1","        NaN"
+"1","
+"
+"1","  1     "
+"1","  0     "
+"1","  0.3310424"
+"1","  0.5487888"
+"1","  0.2068836"
+"1","
+"
+"1","  1     "
+"1","  1     "
+"1","  0.3342042"
+"1","  0.5408819"
+"1","  0.2085334"
+"1","
+"
+"1","  1     "
+"1","  2     "
+"1","  0.3320007"
+"1","  0.5469737"
+"1","  0.2062545"
+"1","
+"
+"1","  2     "
+"1","  0     "
+"1","  0.3488300"
+"1","  0.5113642"
+"1","  0.2075724"
+"1","
+"
+"1","  2     "
+"1","  1     "
+"1","  0.3500194"
+"1","  0.5067697"
+"1","  0.1994283"
+"1","
+"
+"1","  2     "
+"1","  2     "
+"1","  0.3349789"
+"1","  0.5420514"
+"1","  0.1924950"
+"1","
+"
+"1","  3     "
+"1","  0     "
+"1","  0.3474627"
+"1","  0.5168435"
+"1","  0.2062723"
+"1","
+"
+"1","  3     "
+"1","  1     "
+"1","  0.3431284"
+"1","  0.5318658"
+"1","  0.1867487"
+"1","
+"
+"1","  3     "
+"1","  2     "
+"1","  0.3623174"
+"1","  0.4850899"
+"1","  0.1970732"
+"1","
+"
+"1","
+"
+"1","Tuning parameter 'layer3' was held constant at a value of 0"
+"1","
+"
+"1","RMSE was used to select the optimal model using the smallest value.
+"
+"1","The final values used for the model were layer1 = 1, layer2 = 0 and layer3 = 0."
+"1","
+"

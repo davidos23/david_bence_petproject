@@ -1,0 +1,109 @@
+---
+title: "Mesterséges neurális hálózatok"
+output: html_document
+---
+
+Csomagok betöltése:
+```{r}
+library(neuralnet)
+library(fastDummies)
+library(caret)
+```
+
+
+**1. feladat**
+
+Oldja meg a következő részfeladatokat!
+
+a. Importálja a *creditcard.csv* adatfájlt, amely hitelkártya-tranzakciók adatait tartalmazza (a *Class* oszlop adja meg, hogy csalás-e a tranzakció), és töltse be a *neuralnet* kiegészítő csomagot!
+b. Készítse elő az adatokat a neurális hálóval való modellezéshez! 
+c. Építsen a csalásokra egy egyetlen neuronból álló hálózatot! 
+d. Építsen egy rejtett rétegű hálót is két neuronnal!
+e. Növelje a rejtett rétegek számát kettőre, rétegenként 2 és 3 neuronnal! Szükség esetén változtassa az algoritmus hiperparamétereit, hogy konvergáljon a tanuló algoritmus!
+f. Mérje keresztvalidációval a modell teljesítményét!
+  
+------------------------------------
+
+1,a. Adatfájl:
+```{r}
+ creditcard <- read.csv("creditcard.csv")
+```
+
+1.b. Előkészítés:
+Dummy változókra most nincs szükség, mert nincs kategorikus változó.
+
+Normalizálás:
+```{r}
+ norm <- function(x) (x-min(x))/(max(x)-min(x))
+ cc_norm <- sapply(creditcard, norm)
+```
+
+1.c. Neurális hálózat:
+```{r}
+ halo1 <- neuralnet(as.factor(Class)~., data=cc_norm)
+ halo1 <- neuralnet(as.factor(Class)~., data=cc_norm, learningrate=0.1)
+  plot(halo1)
+```
+
+1.d. Két neuoronnal:
+```{r}
+ halo2 <- neuralnet(as.factor(Class)~., data=cc_norm, learningrate=0.1, hidden=2)
+ plot(halo2)
+```
+
+1.e. Két rejtett rétegű háló 2 és 3 neuronnal:
+```{r}
+ halo3 <- neuralnet(as.factor(Class)~., data=cc_norm, learningrate=0.1, hidden=c(2,3))
+ plot(halo3)
+```
+
+**2. feladat**
+
+Oldja meg a következő részfeladatokat!
+
+a. Importálja az *employee.csv* adatfájlt, és készítse elő az adatokat a neurális hálóval való modellezéshez! 
+c. Építsen a jövedelmekre egy egyetlen neuronból álló hálózatot! 
+d. Építsen egy rejtett rétegű hálót is három neuronnal!
+e. Növelje a rejtett rétegek számát kettőre, rétegenként 3-3 neuronnal! Szükség esetén változtassa az algoritmus hiperparamétereit, hogy konvergáljon a tanuló algoritmus!
+f. Mérje keresztvalidációval a modell teljesítményét!
+  
+------------------------------------
+
+2.a. Importálás:
+```{r}
+ employee <- read.csv("employee.csv", row.names=1)
+ emp_kesz <- dummy_cols(employee, remove_selected_columns = TRUE)
+ emp_kesz <- sapply(emp_kesz, norm)
+ emp_kesz <- data.frame(emp_kesz)
+```
+
+2.b. Neurális háló:
+```{r}
+ halo4 <- neuralnet(salary~., data=emp_kesz)
+ plot(halo4)
+```
+
+2.c. Három neuronnal:
+```{r}
+ halo5 <- neuralnet(salary~., data=emp_kesz, hidden=3)
+ plot(halo5)
+```
+
+2.d. Két rejtett réteggel, 3-3 neuronnal:
+```{r}
+ halo6 <- neuralnet(salary~., data=emp_kesz, hidden=c(3,3))
+ plot(halo6)
+```
+2.f. Teljesítmény mérése:
+```{r}
+ keresztval <- trainControl(method="cv", number=10)
+ train(salary~., data=emp_kesz, trControl=keresztval, method="lm")
+ train(salary~., data=emp_kesz, trControl=keresztval, method="neuralnet")
+ hiperp <- expand.grid(layer1=1:5, layer2=0:2, layer3=0)
+ train(salary~., data=emp_kesz, trControl=keresztval, method="neuralnet", tuneGrid=hiperp)
+```
+
+
+**3. feladat**
+
+Készítsen az 1-2. feladatokban ismertetett problémákra mély tanuló neurális hálózatokat a *keras* segítségével!

@@ -1,0 +1,190 @@
+---
+title: "Mitől függnek a fizetések? - Lineáris regresszió"
+date: "10/05/2020"
+output: html_document
+---
+
+A cél feltérképezni lineáris regresszióval, hogy milyen tényezőktől függnek a fizetések egy vállalatnál.
+
+Adatfájl: *employee.RData* \
+Forrás: IBM SPSS adatfájl \
+Jelleg: keresztmetszeti \
+Megfigyelések: 473 munkavállaló \
+\
+Numerikus változók:
+
+ * *salary*: éves fizetés (ezer USD),
+ * *age*: életkor (év), 
+ * *educ*: iskolázottság (év),
+ * *jobtime*: mióta dolgozik a cégnél (hónap),
+ * *prevexp*: korábbi munkatapasztalat (hónap).
+
+Kategorikus változók:
+
+ * *gender* (nominális): nem (Female/Male),
+ * *jobcat* (nominális): munkakör (Clerical/Custodial/Manager),
+ * *minority* (nominális): kisebbségi származás (No/Yes).
+
+# 0. feladat
+
+
+
+```{r}
+library(dplyr)
+library(car)
+library(HH)
+library(lmtest)
+library(sandwich)
+```
+
+
+```{r}
+employee <- read_csv("employee.csv") %>%
+        select(-1) #1. oszlop kiválasztása
+#employee <- readr::read_csv("employee.csv")
+```
+
+```{r}
+#pipe operator shortcut: cmd+option+N
+#hist(exp(rnorm(n=1000)))
+rnorm(n=1000 ) %>%
+        exp() %>%
+        hist()
+
+```
+
+**1. feladat**
+
+Hajtsa végre az alábbiak modellezési lépéseket!
+
+ a. Töltse be az adatfájlt, valamint a *car*, *HH*, *lmtest* és *sandwich* kiegészítő csomagokat!
+ b. Építsen lineáris regressziós modellt, amely a fizetés logaritmusát minden lehetséges prediktor segítségével magyarázza!
+ c. Szűrje új táblába, és nézze meg a kilógó egyéneket!
+ d. Becsülje újra a modellt, és vizsgálja meg a multikollinearitást!
+ e. Lehet-e ebben a példában probléma a hibatagok nemnormalitása? Vizsgálja meg ábrákon a feltevés teljesülését!
+ f. Tesztelje a heteroszkedaszticitást! Probléma esetén a továbbiakban járjon el megfelelő módon!
+ g. Vizsgálja meg és szükség esetén kezelje a nemlinearitást!
+ h. Amennyiben vannak felesleges prediktorok a modellben, távolítsa el azokat!
+ 
+------------------------------------------------
+
+Megoldás:
+```{r}
+fit1 <- lm(formula="log(salary) ~ .", data = employee) #mindent beleveszek log(salary)-n kívül
+```
+
+```{r}
+install.packages('broom')
+library(broom)
+#3 függvénye van: tidy, glance, augment
+```
+```{r}
+fit1
+broom::tidy(fit1) #tisztított mutatók
+broom::glance(fit1) #"pillantás"
+broom::augment(fit1) #megmutatja az eredeti adat mellett a becsült (fitted) változókat, és a cook távolságat
+#Cook distance: mennyi lenne a többi változónak az illeszkedése, ha ezt a változót kidobnánk
+
+```
+```{r}
+set.seed(2021)
+sample_df <- data.frame(x=rnorm(100),y=rnorm(100))
+lm("y~x", data = sample_df) #y-t magyarázzuk x-szel
+
+outlier_df <- data.frame(x=100, y=100)
+outlier_df2 <- rbind(outlier_df, sample_df)#rowbind, két dataframe sorait egymásra rakja
+
+lm("y~x", data=outlier_df2) %>%
+        broom::augment() %>%
+        pull(.cooksd) %>%
+        plot() #cookdistanceok plotolása
+#pull(.cooksd) egy olszopot kér le az adott dataframeből
+```
+## c
+```{r}
+fit1 %>%
+        broom::augment() %>%
+        pull(.cooksd) %>%
+        plot() 
+```
+```{r}
+#rstudent: studentizálja a modellt
+abs(rstudent(fit1))>3 #rule of thumb
+```
+
+megválunk 6 értéktől
+```{r}
+szurt_df <- employee[abs(rstudent(fit1))<=3,] #azokat a sorokat fogja kidobni, amelyek nagyobbak 3-nál
+```
+d.)
+```{r}
+#Multikollinearitás: magyarázó változók korrelálnak, és nem tudjuk, hogy melyik hat akkor a változók közül
+fit2 <- lm("log(salary) ~ .", data=szurt_df)
+vif(fit2) #variance inflating factor: hányszor nagyobb lesz nagyobb az adott magyarázó változó std hibája, ha több változó mellett van jelen
+#vif>2: zavaró
+#vif>5: káros
+#vif>10: elfogadhatatlan
+
+#(options(scipen=999): kikapcsolja a normálalakot, options(scipen=1) visszakapcsolja)
+
+```
+e.) Rajzolunk egy hisztogramot, QQ-plotot
+```{r}
+hist(fit2$residuals)
+
+qqnorm(fit2$residuals)
+```
+
+f.)
+```{r}
+bptest(fit12) #Heteroszkedaszticitás teszt, input: modell
+#Kicsi p--> a nullhipotézist elvetjük
+#Nullhipotézis: nincs heteroszkedaszticitás
+```
+Van heteroszkedaszticitás -> a modell p értékei nem felelnek meg a becsülteknek (torzítottak a t-próbák)
+```{r}
+coeftest(fit2,vcov=vcovHC) %>%
+        broom::tidy()
+```
+```{r}
+linearHypothesis(fit2, "prevexp = 0")
+#Mi lesz, ha a beadott input történik a modellben (prevexp=0)?
+```
+
+
+
+
+**2. feladat**
+
+Értelmezze az 1. feladat végén kapott modellt az alábbiak szerint!
+
+
+
+ a. Hogyan értelmezhető a prediktorok parciális hatása?
+ 
+```{r}
+library(broom)
+broom::tidy(fit2) %>%
+        mutate(estimate=exp(estimate))
+```
+ b. Melyek a legfontosabb prediktorok?
+ #sztenderdizált modellben a legnagyobb együtthatójú változó
+```{r}
+GGally::ggcoef_model(fit2)
+broom::tidy(fit2)
+```
+ 
+ c. Minősítse a modell teljesítményét!
+```{r}
+broom::glance(fit2)
+#AIC, BIC és adj.rsquared alapján lehet minősíteni
+#AIC és BIC alapján összegasonlítani csak azonos nagyságrandűt lehet
+```
+```{r}
+lm("salary ~.",data=szurt_df) %>% 
+        broom::glance()
+```
+ 
+ 
+ d. Korreláció vagy ok-okozati kapcsolat áll fenn az egyes prediktorok és a fizetések között?
+-->csak elméleti módon lehet megmondani

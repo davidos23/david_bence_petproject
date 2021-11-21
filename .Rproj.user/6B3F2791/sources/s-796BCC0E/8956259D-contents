@@ -1,0 +1,112 @@
+---
+title: "Adósminősítő rendszer építése - Logit modell"
+date: "10/05/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+A cél: banki adósminősítő modell készítése.
+
+Adatfájl: *bankloan.RData* \
+Forrás: IBM SPSS adatfájl \
+Jelleg: keresztmetszeti \
+Megfigyelések: 700 adós \
+\
+Numerikus változók:
+
+ * *age*: életkor (év), 
+ * *employ*: munkaviszony hossza (év), 
+ * *address*: mióta lakik a jelenlegi lakcímén (év), 
+ * *debtinc*: összes adósság az éves jövedelem %-ában, 
+ * *lincome*: éves jövedelem (ezer USD) logaritmusa,
+ * *lcreddebt*: hitelkártya-adósság (ezer USD) logaritmusa,
+ * *lothdebt*: egyéb adósság (ezer USD) logaritmusa.
+
+Kategorikus változók:
+
+ * *ed* (ordinális): iskolázottság (5 kategória),
+ * *default* (nominális): fizetésképtelenség (No/Yes).
+
+```{r}
+library(readr)
+bankloan <- read.csv("bankloan.csv")
+```
+
+
+
+**1. feladat**
+
+Hajtsa végre az alábbi modellezési lépéseket!
+
+ a. Töltse be az adatfájlt, valamint a *car*, *HH*, *lmtest* és *sandwich* kiegészítő csomagokat!
+        (regresszióval kapcsolatos fv-ket tartalmaznak)
+ b. Építsen logit modellt, amely a fizetésképtelenséget minden lehetséges prediktor segítségével magyarázza!
+
+Binarizálás:
+```{r}
+bankloan <- bankloan %>% 
+  mutate(default = default == "Yes") #default oszlopot átváltoztatja logikai vektorrá 
+```
+ 
+ 
+```{r}
+fit1 <- glm(formula="default~.", data=bankloan, family = binomial(link="logit")) #maximum likelihoodot használó lm
+library(broom)
+tidy(fit1)
+```
+ 
+ c. Szűrje új táblába, és nézze meg a kilógó egyéneket!
+```{r}
+sum(abs(rstudent(fit1))>3)
+```
+ 
+ d. Becsülje újra a modellt, és vizsgálja meg a multikollinearitást!
+```{r}
+vif(fit1)
+```
+ 
+ e. Vizsgálja meg, és szükség esetén kezelje a nemlinearitást!
+```{r}
+crPlots(fit1)
+```
+ Tehát 15-nél van egy törés crdebtben.
+ 
+ f. Amennyiben vannak felesleges prediktorok a modellben, távolítsa el azokat!
+```{r}
+
+fit3 <- glm(formula="default~. + pmax(debtinc-15,0)", data=bankloan, family = binomial(link="logit"))
+```
+ 
+ 
+```{r}
+bankloan %>% 
+  select(debtinc) %>% 
+  mutate
+
+```
+ 
+----------------------
+
+
+
+
+**2. feladat**
+
+Értelmezze az 1. feladat végén kapott modellt az alábbiak szerint!
+
+ a. Hogyan értelmezhető a prediktorok parciális hatása?
+ b. Melyek a legfontosabb prediktorok?
+ c. Minősítse a modell teljesítményét!
+ d. Határozza meg az optimális küszöbértéket abban az esetben, ha a másodfajú hiba ötször költségesebb az elsőfajú hibánál!
+
+------------------------------------
+
+
+
+
+
+
+
+
+

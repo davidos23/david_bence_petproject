@@ -1,0 +1,2 @@
+"0","ANN1 <- neuralnet(as.factor(HeartDisease)~., data=heart_kesz,learningrate=0.1, hidden=5)"
+"0","plot(ANN1)"

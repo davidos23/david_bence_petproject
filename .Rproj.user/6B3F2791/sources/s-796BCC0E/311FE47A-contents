@@ -1,0 +1,129 @@
+---
+title: "Mesterséges neurális hálózatok"
+output: html_document
+---
+
+**1. feladat**
+
+Oldja meg a következő részfeladatokat!
+
+a. Importálja a *creditcard.csv* adatfájlt, amely hitelkártya-tranzakciók adatait tartalmazza (a *Class* oszlop adja meg, hogy csalás-e a tranzakció), és töltse be a *neuralnet* kiegészítő csomagot!
+b. Készítse elő az adatokat a neurális hálóval való modellezéshez! 
+c. Építsen a csalásokra egy egyetlen neuronból álló hálózatot! 
+d. Építsen egy rejtett rétegű hálót is két neuronnal!
+e. Növelje a rejtett rétegek számát kettőre, rétegenként 2 és 3 neuronnal! Szükség esetén változtassa az algoritmus hiperparamétereit, hogy konvergáljon a tanuló algoritmus!
+f. Mérje keresztvalidációval a modell teljesítményét!
+  
+------------------------------------
+Csomagok betöltése:
+```{r}
+library(neuralnet)
+library(readr)
+library(fastDummies)
+library(caret) #neurális hálók teljesítményméréséhez kell
+library(keras)
+install_keras(method = 'conda', envname = 'r-projects')
+```
+
+
+1.a 
+Import:
+```{r}
+creditcard <- read_csv("creditcard.csv")
+View(creditcard)
+```
+
+
+1.b Előkészítés
+
+Dummykra nincs szükség, mert nincs kategorikus változó.
+
+Normalizálás
+```{r}
+norm <- function(x) (x-min(x))/(max(x)-min(x)) #normalizáló fv létrehozása
+norm(creditcard$Amount)
+cc_norm <- sapply(creditcard, norm) #minden oszlopra alkalmazza a beadott függvényt
+```
+
+1.c Neurális háló 
+```{r}
+# start_time = Sys.time()
+halo1 <-  neuralnet(as.factor(Class)~.,data = cc_norm) #as.factor: Class-t binaris, nem flaot valtozóként értelmezi
+# end_time = Sys.time()
+# end_time-start_time
+plot(halo1)
+```
+
+1.d Két neuronos háló
+```{r}
+halo2 <-  neuralnet(as.factor(Class)~.,data = cc_norm, hidden = 2) #2 neuronos rejtett rétegű háló készítése
+plot(halo2)
+
+```
+
+1.d Két rejtett rétegű háló kettő és három neuronnal
+```{r}
+halo3 <-  neuralnet(as.factor(Class)~.,data = cc_norm, hidden = c(2,3)) #2 rétegű háló készítése, c(2,3), első rejtett rétegben 2, másodikban 3 neuronnal
+plot(halo3)
+
+```
+
+**2. feladat**
+
+Oldja meg a következő részfeladatokat!
+
+a. Importálja az *employee.csv* adatfájlt, és készítse elő az adatokat a neurális hálóval való modellezéshez! 
+c. Építsen a jövedelmekre egy egyetlen neuronból álló hálózatot! 
+d. Építsen egy rejtett rétegű hálót is három neuronnal!
+e. Növelje a rejtett rétegek számát kettőre, rétegenként 3-3 neuronnal! Szükség esetén változtassa az algoritmus hiperparamétereit, hogy konvergáljon a tanuló algoritmus!
+f. Mérje keresztvalidációval a modell teljesítményét!
+  
+------------------------------------
+
+Importálás
+```{r}
+employee <- read_csv("employee.csv")
+emp_kesz <- dummy_cols(employee,remove_selected_columns=TRUE) #csak dummyk maradjanak, eredetiek törlődjenek
+emp_kesz <- sapply(emp_kesz,norm)
+emp_kesz <- data.frame(emp_kesz) #adatfile-lá alakítás
+```
+
+
+2.b Neuralis halo
+```{r}
+halo4 <- neuralnet(salary~., data=emp_kesz) #input egy dataframe kell hogy legyen
+plot(halo4)
+```
+2.c Három neuronnal:
+```{r}
+halo5 <- neuralnet(salary~., data=emp_kesz,hidden=3) #input egy dataframe kell hogy legyen
+plot(halo5)
+```
+2.d Kettő rejtett réteg, 3-3 neuronnal:
+```{r}
+halo6 <- neuralnet(salary~., data=emp_kesz, hidden=c(3,3)) #input egy dataframe kell hogy legyen
+plot(halo6)
+```
+
+2.f. Teljesítmény mérése:
+```{r}
+keresztval <- trainControl(method="cv",number=10)
+train(salary~.,data=emp_kesz,trControl=keresztval,method = "lm") #R^2 most 74.5%
+
+train(salary~.,data=emp_kesz,trControl=keresztval,method = "neuralnet") #Legjobb az 5 neuronos
+
+hiperp <- expand.grid(layer1=1:5,layer2=0:2,layer3=0)#hiperparaméterek definiálása NN-hez, rejtett rétegben próbáljon ki különféle neuronszámokat, egy dataframet ad ki a kombinaciokkal
+train(salary~.,data=emp_kesz,trControl=keresztval,method = "neuralnet",tuneGrid = hiperp) #Legjobb az 5 neuronos
+
+```
+
+
+**3. feladat**
+
+Készítsen az 1-2. feladatokban ismertetett problémákra mély tanuló neurális hálózatokat a *keras* segítségével!
+
+```{r}
+
+creditcard <- read_csv('creditcard.csv')
+```
+
