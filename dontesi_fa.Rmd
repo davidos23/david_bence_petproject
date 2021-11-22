@@ -83,34 +83,69 @@ opt_cp = cp.select(tree_0)
 ```
 
 Modell sokaság legyártása
+
+Töltsük be a szükséges packagekat.
 ```{r}
-get_random_indeces <- function(t_n, t_k, df){
-  "
-  t_n : number of desired rows for test data
-  t_k : number of maximum unique rows from df
-  note that t_k < = t_n
-  
-  this function gives random indeces for the testing data. This means if you use it, the testing data likely to have
-  same indeces.
-  "
-  if (t_k < t_n){
-    rand_list = sample(1:t_k)
-    remain_list = sample(1:(t_n-t_k))
-    return(df[append(rand_list,remain_list),])
-  }else if(t_k == t_n){
-    rand_list = sample(1:t_n)
-    return (df[rand_list,])
-  }else{
-    return("Not well given inputs. Please check the function how to use it!")
-  }
-}
+library(randomForest)
+install.packages("caret")
+library(caret)
+library(e1071)
 ```
 
+Az erdő legyártásához több különböző függvényt fogunk használni. Első körben a 
+train() és trainControl() metódusokat nézzük meg. Ezek a caret csomagban találhatóak.
+Hozzunk létre egy 'tanulást segítő' objektumot, amit feltöltünk paraméterekkel és ezt továbbadjuk a függvénynek
+
+doksi: https://www.rdocumentation.org/packages/caret/versions/6.0-90/topics/trainControl
 ```{r}
-t_n = 10
-t_k = 10
-filtered_df = get_random_indeces(t_n,t_k,heart_failure)
+train_control = trainControl(
+    method = "cv", # resampling method
+    number = 11, #node-ok száma
+    search = "grid" #a finomhangolási paraméter
+    )
+```
+A számmal megadott 0 és 1 értékeket az R numerikus oszlopnak tekinti, ezért nem engedi
+elvégezni rendesen az erdő készítését, így átnevezzük az értékeket.
+```{r}
+heart_failure["HeartDisease"][heart_failure["HeartDisease"] == 1] <- "Y"
+heart_failure["HeartDisease"][heart_failure["HeartDisease"] == 0] <- "N"
 ```
 
+Kezdjük el a modellezést egy egyszerű futással:
+```{r}
+tree_default <- train(HeartDisease~.,
+    data = heart_failure,
+    method = "rf",
+    metric = "Accuracy",
+    trControl = train_control)
+print(tree_default)
+```
+
+ A legfelső sorban láthatjuk a legmagasabb Accuracy értéket, ehhez pedig az 
+ mtry = 2 tartozik. Azonban nézzük meg, hogy tudjuk - e ezt finomhangolni.
+ (fontos: futásonként változhat az optimális érték, így rögzítsük a seed-et)
+```{r}
+set.seed(1)
+finom_hangolas <- expand.grid(.mtry = c(1: 10))
+rf_mtry <- train(HeartDisease~.,
+    data = heart_failure,
+    method = "rf",
+    metric = "Accuracy",
+    tuneGrid = finom_hangolas,
+    trControl = train_control,
+    importance = TRUE,
+    nodesize = 10, #implicit megadja milyen mélységű lehet a fa. minimum size of terminal nodes
+    ntree = 300)
+print(rf_mtry)
+opt_mtry=rf_mtry$bestTune$mtry
+```
+ Az eredmény alapján mtry=2 tényleg a legjobb döntés volt
+ Most optimalizáljunk a maxnodes paraméterre.
  
+```{r}
+
+```
+ 
+ hivatkozások
+ https://stats.stackexchange.com/questions/158583/what-does-node-size-refer-to-in-the-random-forest
  
