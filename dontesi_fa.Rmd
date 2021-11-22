@@ -5,11 +5,9 @@
 install.packages("rpart")
 install.packages("rpart.plot")
 install.packages("randomForest")
-install.packages("boot")
 library(rpart)
 library(rpart.plot)
 library(randomForest)
-library("boot")
 ```
 0) Adatok jellemzése
 Az adatot a https://www.kaggle.com/fedesoriano/heart-failure-prediction címről töltöttük le.
@@ -122,7 +120,8 @@ print(tree_default)
 ```
 
  A legfelső sorban láthatjuk a legmagasabb Accuracy értéket, ehhez pedig az 
- mtry = 2 tartozik. Azonban nézzük meg, hogy tudjuk - e ezt finomhangolni.
+ mtry = 2 tartozik, ami azt jelenti, hogy eszerint 2 változó legyen elérhető, amikor
+ egy csomópontnál vágunk. Azonban nézzük meg, hogy tudjuk - e ezt finomhangolni.
  (fontos: futásonként változhat az optimális érték, így rögzítsük a seed-et)
 ```{r}
 set.seed(1)
@@ -140,12 +139,87 @@ print(rf_mtry)
 opt_mtry=rf_mtry$bestTune$mtry
 ```
  Az eredmény alapján mtry=2 tényleg a legjobb döntés volt
- Most optimalizáljunk a maxnodes paraméterre.
+ Most optimalizáljunk a maxnodes paraméterre. Itt is rögzített seed értékkel haladunk tovább
  
 ```{r}
-
+store_maxnode <- list()
+tuneGrid <- expand.grid(.mtry = opt_mtry)
+for (maxnodes in c(5: 15)) {
+    set.seed(1)
+    rf_maxnode <- train(HeartDisease~.,
+        data = heart_failure,
+        method = "rf",
+        metric = "Accuracy",
+        tuneGrid = tuneGrid,
+        trControl = train_control,
+        importance = TRUE,
+        nodesize = 10,
+        maxnodes = maxnodes, #itt az iteráló elem
+        ntree = 300)
+    current_iteration <- toString(maxnodes)
+    store_maxnode[[current_iteration]] <- rf_maxnode
+}
+results_mtry <- resamples(store_maxnode)
+summary(results_mtry)
 ```
+ Az adatok leolvasás után a maxnodes érték optimálisan a 13 mellett van
  
+```{r}
+opt_maxnode = 13
+```
+A következő lépésben iteráljuk ki a legjobb ntree-s értéket, azaz a fák számát.
+
+ 
+```{r}
+store_maxtrees <- list()
+for (ntree in c(5,10,20,30,40,50,100,200,300)) {
+    set.seed(1)
+    rf_maxtrees <- train(HeartDisease~.,
+        data = heart_failure,
+        method = "rf",
+        metric = "Accuracy",
+        tuneGrid = tuneGrid,
+        trControl = train_control,
+        importance = TRUE,
+        nodesize = 14,
+        maxnodes = opt_maxnode,
+        ntree = ntree # itt iterálunk végig
+        )
+    store_maxtrees[[toString(ntree)]] <- rf_maxtrees
+}
+results_tree <- resamples(store_maxtrees)
+summary(results_tree)
+```
+Az ideális fa szám ezek alapján a 10 lett.
+```{r}
+opt_ntree = 10
+```
+
+Elkészültek az optimális beállítások az erdőhöz, így most teszteljük azt!
+otimális fa  szám : 10
+optimális node szám : 13
+optimális mtry : 3
+
+```{r}
+vegso <- train(HeartDisease~.,
+    heart_failure,
+    method = "rf",
+    metric = "Accuracy",
+    tuneGrid = tuneGrid, #ebben van az mtry optimális értéke
+    trControl = train_control,
+    importance = TRUE,
+    nodesize = 14,
+    ntree = opt_ntree,
+    maxnodes = opt_maxnode)
+```
+
+Gyártsunk le egy teszt adatot és nézzük meg az eredményt:
+```{r}
+test_data = heart_failure[1:300,]
+prediction_1 = predict(vegso,test_data)
+confusionMatrix(prediction_1, as.factor(test_data$HeartDisease))
+```
+
  hivatkozások
  https://stats.stackexchange.com/questions/158583/what-does-node-size-refer-to-in-the-random-forest
  
