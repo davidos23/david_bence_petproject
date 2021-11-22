@@ -32,12 +32,22 @@ library(neuralnet)
 library(nnet)
 library(fastDummies)
 library(caret)
+library(cvms)
 
+#Plot
+library(GGally)
 ```
 
 ### Segédfüggvények definiálása
 ```{r}
 norm <- function(x) (x-min(x))/(max(x)-min(x))
+classifier <- function(x,cut_off=0.5) {
+  if(x < cut_off){
+    return(0)
+  } else {
+    return(1)
+  }
+}
 ```
 
 
@@ -47,27 +57,75 @@ library(readr)
 heart <- read_csv("heart.csv")
 ```
 
+
 Dummy változók átalakítása oszlopokká, normálás
 ```{r}
 heart_kesz <- dummy_cols(heart, remove_selected_columns = TRUE)
-heart_kesz <- sapply(heart_kesz, norm)
+heart_kesz <- sapply(heart_kesz, norm) %>% data.frame()
+heart_kesz <- heart_kesz[c("HeartDisease","Age", "RestingBP", "Cholesterol", "FastingBS", "MaxHR", "Oldpeak", "Sex_F", "Sex_M" ,  "ChestPainType_ASY", "ChestPainType_ATA", "ChestPainType_NAP", "ChestPainType_TA", "RestingECG_LVH", "RestingECG_Normal", "RestingECG_ST", "ExerciseAngina_N", "ExerciseAngina_Y", "ST_Slope_Down", "ST_Slope_Flat", "ST_Slope_Up")]
 ```
 
-Neurális háló
+___________________________________________________________
+Szétbontjuk az adatokat tanulási és tesztelési halmazokra:
 ```{r}
-ANN1 <- neuralnet(as.factor(HeartDisease)~., data=heart_kesz,learningrate=0.1, hidden=5)
+#train_index <- createDataPartition(heart_kesz$HeartDisease,p=0.8,list = FALSE)
+#heart_kesz_train <- heart_kesz[train_index,]
+#heart_kesz_test <- heart_kesz[-train_index,]
+```
+###___________________________________________________________
+
+Kereszt-validációs neurális háló modell tanítása:
+```{r}
+kereszt_validacio <- trainControl(method="cv",number=10)
+hiper_parameterek <- expand.grid(size=1:10,decay = 1:5)
+ANN1_train <- train(as.factor(HeartDisease)~., data=heart_kesz, method="nnet", tuneGrid=hiper_parameterek, trControl=kereszt_validacio)
+
+ANN1_train$bestTune
 plot(ANN1)
 ```
-Teljesítmény mérése:
+###___________________________________________________________
+Train-test splites neurális háló:
 
-A teljesítményt lineáris logit modellel is összemérjük.
+Adat splittelése:
 ```{r}
- kereszt_validacio <- trainControl(method="cv", number=10) 
+train_index <- createDataPartition(heart_kesz$HeartDisease,p=0.8,list = FALSE)
+heart_kesz_train <- heart_kesz[train_index,]
+heart_kesz_test <- heart_kesz[-train_index,]
+```
 
- train(as.factor(HeartDisease)~., data=heart_kesz, trControl=kereszt_validacio, method="glm")
- 
- hiperpar_grid<- expand.grid(layer1=0:3, layer2=0:2, layer3=0)
- train(HeartDisease~., data=heart_kesz, trControl=kereszt_validacio, method="neuralnet", tuneGrid=hiperpar_grid)
+Neurális háló:
+```{r}
+ANN <- neuralnet(HeartDisease~., data = heart_kesz_train,hidden=c(5,3),linear.output = FALSE)
+```
+
+
+Predikcio:
+```{r}
+selected_cut_off=0.5
+#A classifier egy az elején definiált függvény, átalakítja pred-et 0-1-esekből álló vektorrá a selected_cut_off-tól függően
+pred <- predict(ANN,heart_kesz_test) %>% round(3)
+pred <- sapply(pred,classifier,cut_off=selected_cut_off)
+```
+
+Konfúziós mátrix vizualizálva:
+```{r}
+conf_matrix<- tibble("prediction"=pred,"target_var" = heart_kesz_test$HeartDisease) %>% 
+  table() %>%
+  as_tibble() %>% 
+  plot_confusion_matrix(prediction_col = "prediction",
+                      target_col = "target_var", 
+                      counts_col = "n",
+                      class_order = c("1","0"))
+
+conf_matrix
+```
+Klasszifikációs mutatók:
+```{r}
+cfm <- confusionMatrix(data = factor(pred), reference = factor(heart_kesz_test$HeartDisease), mode = "prec_recall")
+```
+F1 mutató, ezt akarjuk maximalizálni:
+```{r}
+cfm$byClass[7]
 ```
 
 

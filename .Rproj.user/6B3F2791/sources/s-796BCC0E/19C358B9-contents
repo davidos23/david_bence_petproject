@@ -32,6 +32,10 @@ library(neuralnet)
 library(nnet)
 library(fastDummies)
 library(caret)
+library(keras)
+
+#Plot
+library(GGally)
 ```
 
 ### Segédfüggvények definiálása
@@ -46,29 +50,60 @@ library(readr)
 heart <- read_csv("heart.csv")
 ```
 
+
 Dummy változók átalakítása oszlopokká, normálás
 ```{r}
 heart_kesz <- dummy_cols(heart, remove_selected_columns = TRUE)
-heart_kesz <- sapply(heart_kesz, norm)
+heart_kesz <- sapply(heart_kesz, norm) %>% data.frame()
+heart_kesz <- heart_kesz[c("HeartDisease","Age", "RestingBP", "Cholesterol", "FastingBS", "MaxHR", "Oldpeak", "Sex_F", "Sex_M" ,  "ChestPainType_ASY", "ChestPainType_ATA", "ChestPainType_NAP", "ChestPainType_TA", "RestingECG_LVH", "RestingECG_Normal", "RestingECG_ST", "ExerciseAngina_N", "ExerciseAngina_Y", "ST_Slope_Down", "ST_Slope_Flat", "ST_Slope_Up")]
 ```
 
-Neurális háló
+___________________________________________________________
+Szétbontjuk az adatokat tanulási és tesztelési halmazokra:
 ```{r}
-ANN1 <- neuralnet(as.factor(HeartDisease)~., data=heart_kesz,learningrate=0.1, hidden=5)
-plot(ANN1)
+#train_index <- createDataPartition(heart_kesz$HeartDisease,p=0.8,list = FALSE)
+#heart_kesz_train <- heart_kesz[train_index,]
+#heart_kesz_test <- heart_kesz[-train_index,]
 ```
-Teljesítmény mérése:
+___________________________________________________________
 
-A teljesítményt lineáris logit modellel is összemérjük.
+Kereszt-validációs neurális háló modell tanítása:
 ```{r}
- kereszt_validacio <- trainControl(method="cv", number=10) 
+kereszt_validacio <- trainControl(method="cv",number=10)
+hiper_parameterek <- expand.grid(size=1:10,decay = seq(0.1,1,by=0.1))
+ANN1 <- train(as.factor(HeartDisease)~., data=heart_kesz, method="nnet", tuneGrid=hiper_parameterek, trControl=kereszt_validacio)
 
- train(as.factor(HeartDisease)~., data=heart_kesz, trControl=kereszt_validacio, method="glm")
- 
- hiperpar_grid<- expand.grid(layer1=0:3, layer2=0:2, layer3=0)
- train(HeartDisease~., data=heart_kesz, trControl=kereszt_validacio, method="neuralnet", tuneGrid=hiperpar_grid)
+ANN1$bestTune
+
 ```
 
 
+### Keras:
+
+Szétbontás training és testing halmazokra:
+```{r}
+set.seed(101)
+train_index <- createDataPartition(heart_kesz$HeartDisease,p=0.7,list = FALSE)
+
+adat <- as.matrix(heart_kesz)
+
+
+prediktorok_train <- adat[train_index,2:21]
+celvaltozo_train <- adat[train_index,1]
+prediktorok_test <- adat[-train_index,2:21]
+celvaltozo_test <- adat[train_index,1]
+```
+
+Model létrehozása:
+```{r}
+neural_halo1 <- keras_model_sequential() #model létrehozása
+
+neural_halo1 %>%
+  layer_dense(units = 5, activation="relu",input_shape=c(20)) %>% #input és az első rejtett réteg létrehozása 
+  layer_dense(units=2,activation="sigmoid") #output réteg létrehozása
+
+neural_halo1 %>% compile(loss="binary_crossentropy")
+
+```
 
 
