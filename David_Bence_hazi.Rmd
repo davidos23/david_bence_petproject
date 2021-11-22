@@ -66,23 +66,7 @@ heart_kesz <- heart_kesz[c("HeartDisease","Age", "RestingBP", "Cholesterol", "Fa
 ```
 
 ___________________________________________________________
-Szétbontjuk az adatokat tanulási és tesztelési halmazokra:
-```{r}
-#train_index <- createDataPartition(heart_kesz$HeartDisease,p=0.8,list = FALSE)
-#heart_kesz_train <- heart_kesz[train_index,]
-#heart_kesz_test <- heart_kesz[-train_index,]
-```
-###___________________________________________________________
 
-Kereszt-validációs neurális háló modell tanítása:
-```{r}
-kereszt_validacio <- trainControl(method="cv",number=10)
-hiper_parameterek <- expand.grid(size=1:10,decay = 1:5)
-ANN1_train <- train(as.factor(HeartDisease)~., data=heart_kesz, method="nnet", tuneGrid=hiper_parameterek, trControl=kereszt_validacio)
-
-ANN1_train$bestTune
-plot(ANN1)
-```
 ###___________________________________________________________
 Train-test splites neurális háló:
 
@@ -125,9 +109,54 @@ cfm <- confusionMatrix(data = factor(pred), reference = factor(heart_kesz_test$H
 ```
 F1 mutató, ezt akarjuk maximalizálni:
 ```{r}
+
+cfm$overall[1]
+cfm$byClass[5]
+cfm$byClass[6]
 cfm$byClass[7]
 ```
 
 
+Átlagos F1 100 train-test-split után:
 
+K db különböző split futtatása, a szükséges mutatókat átlagoljuk:
+```{r}
+selected_cut_off=0.5 #Ez lesz a választott cut-offunk, de tapasztalatok szerint a becsült bináris adat nagyon ritkán esik túl távol 0-tól vagy 1-től, így a 0.1 vagy 0.9-es cut-off ugyanazt az eredményt nyújtja
+ANN_Accuracy = array()
+ANN_Precision = array()
+ANN_Recall = array()
+ANN_F1 = array()
 
+K=50
+for (i in 1:K){
+  #Splittelés
+  train_index <- createDataPartition(heart_kesz$HeartDisease,p=0.3,list = FALSE)
+  heart_kesz_train <- heart_kesz[train_index,]
+  heart_kesz_test <- heart_kesz[-train_index,]
+  
+  #Neurális háló tanítása
+  ANN_looped <- neuralnet(HeartDisease~., data = heart_kesz_train,hidden=c(5,3),linear.output = FALSE)
+
+  #Becslés
+  pred <- predict(ANN_looped,heart_kesz_test) %>% round(3)
+  pred <- sapply(pred,classifier,cut_off=selected_cut_off)
+  
+  #Eredmények feljegyzése
+  cfm_looped <- confusionMatrix(data = factor(pred), reference = factor(heart_kesz_test$HeartDisease), mode = "prec_recall")
+  
+  ANN_Accuracy <- rbind(ANN_Accuracy,cfm_looped$overall[1])
+  ANN_Precision <- rbind(ANN_Precision,cfm_looped$byClass[5])
+  ANN_Recall <- rbind(ANN_Recall,cfm_looped$byClass[6])
+  ANN_F1 <- rbind(ANN_F1,cfm_looped$byClass[7])
+
+  
+}
+#K soros mérőszám mátrix:
+metrics <- cbind(ANN_Accuracy,ANN_Precision, ANN_Recall, ANN_F1)[2:(K+1),]
+
+#A K sor átlaga - egy sorvektor:
+average_metrics <- apply(metrics,2,mean)
+
+metrics
+average_metrics
+```
