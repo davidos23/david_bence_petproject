@@ -5,9 +5,13 @@
 install.packages("rpart")
 install.packages("rpart.plot")
 install.packages("randomForest")
+install.packages("caret")
+install.packages("e1071")
 library(rpart)
 library(rpart.plot)
 library(randomForest)
+library(caret)
+library(e1071)
 ```
 0) Adatok jellemzése
 Az adatot a https://www.kaggle.com/fedesoriano/heart-failure-prediction címről töltöttük le.
@@ -34,13 +38,13 @@ file_path <- "/Users/sbeni/suli/Reggelistat/PET-project/heart.csv"
 heart_failure <- read.csv(file_path)
 ```
 
-2) A fa elkészítése
+2) Wgy fa elkészítése
 ```{r}
 decision_tree <- rpart(HeartDisease~., data=heart_failure)
 rpart.plot(decision_tree)
-#prp(decision_tree)
+prp(decision_tree)
 ```
-Nézzük meg különböző 'cp (complexity paramter) ' értékek mellett
+Nézzük meg különböző 'cp (complexity paramter) ' értékek mellett a fákat
 *a cp érték megmutatj,a hogy mennyire szerteágató a döntési fánk
 
 0-ás cp mellett nagyon elágazó ábrát kapunk
@@ -80,15 +84,8 @@ cp.select <- function(big.tree) {
 opt_cp = cp.select(tree_0)
 ```
 
-Modell sokaság legyártása
+                                                      Modell sokaság legyártása
 
-Töltsük be a szükséges packagekat.
-```{r}
-library(randomForest)
-install.packages("caret")
-library(caret)
-library(e1071)
-```
 
 Az erdő legyártásához több különböző függvényt fogunk használni. Első körben a 
 train() és trainControl() metódusokat nézzük meg. Ezek a caret csomagban találhatóak.
@@ -122,7 +119,7 @@ print(tree_default)
  A legfelső sorban láthatjuk a legmagasabb Accuracy értéket, ehhez pedig az 
  mtry = 2 tartozik, ami azt jelenti, hogy eszerint 2 változó legyen elérhető, amikor
  egy csomópontnál vágunk. Azonban nézzük meg, hogy tudjuk - e ezt finomhangolni.
- (fontos: futásonként változhat az optimális érték, így rögzítsük a seed-et)
+ (fontos: futásonként változhat az optimális érték, így rögzítsük a seed-et az átláthatóság miatt)
 ```{r}
 set.seed(1)
 finom_hangolas <- expand.grid(.mtry = c(1: 10))
@@ -213,15 +210,25 @@ vegso <- train(HeartDisease~.,
     maxnodes = opt_maxnode)
 ```
 
-Gyártsunk le egy teszt adatot és nézzük meg az eredményt:
+Gyártsunk le egy teszt adatot és nézzük meg az eredményt különböző adatokon:
 ```{r}
-test_data = heart_failure[1:300,]
-prediction_1 = predict(vegso,test_data)
-confusionMatrix(prediction_1, as.factor(test_data$HeartDisease))
+test_data1 = heart_failure[1:300,]
+prediction_1 = predict(vegso,test_data1)
+cfm1=confusionMatrix(prediction_1, as.factor(test_data1$HeartDisease))
+print(cfm1)
+test_data2 = heart_failure[300:600,]
+prediction_2 = predict(vegso,test_data2)
+cfm2=confusionMatrix(prediction_2, as.factor(test_data2$HeartDisease))
+print(cfm2)
+test_data3 = heart_failure[600:900,]
+prediction_3 = predict(vegso,test_data3)
+cfm3=confusionMatrix(prediction_3, as.factor(test_data3$HeartDisease))
+print(cfm3)
 ```
 
  hivatkozások
  https://stats.stackexchange.com/questions/158583/what-does-node-size-refer-to-in-the-random-forest
  http://code.env.duke.edu/projects/mget/export/HEAD/MGET/Trunk/PythonPackage/dist/TracOnlineDocumentation/Documentation/ArcGISReference/RandomForestModel.FitToArcGISTable.html
  https://www.guru99.com/r-random-forest-tutorial.html#3
+ https://www.rdocumentation.org/packages/randomForest/versions/4.6-14/topics/randomForest
  
