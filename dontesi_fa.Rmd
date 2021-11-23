@@ -3,21 +3,7 @@ output:
   html_document: default
   pdf_document: default
 ---
-```{r}
-#Döntési fa a heart failure adatokra
-```
-```{r}
-install.packages("rpart")
-install.packages("rpart.plot")
-install.packages("randomForest")
-install.packages("caret")
-install.packages("e1071")
-library(rpart)
-library(rpart.plot)
-library(randomForest)
-library(caret)
-library(e1071)
-```
+
 0) Adatok jellemzése
 Az adatot a https://www.kaggle.com/fedesoriano/heart-failure-prediction címről töltöttük le.
 
@@ -37,17 +23,30 @@ A heart failure adatokat több országból gyűjtötték össze nekünk, az adat
 
 Mi arra vállalkoztunk, hogy modellt építsünk a szívbetegség fennállásának eldöntésére.
 
+0) Felhasznált packagek betöltése
+```{r}
+install.packages("rpart")
+install.packages("rpart.plot")
+install.packages("randomForest")
+install.packages("caret")
+install.packages("e1071")
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(caret)
+library(e1071)
+```
+
 1) Töltsük be az adatot!
 ```{r}
 file_path <- "/Users/sbeni/suli/Reggelistat/PET-project/heart.csv"
 heart_failure <- read.csv(file_path)
 ```
 
-2) Wgy fa elkészítése
+2) Egy fa elkészítése
 ```{r}
 decision_tree <- rpart(HeartDisease~., data=heart_failure)
 rpart.plot(decision_tree)
-prp(decision_tree)
 ```
 Nézzük meg különböző 'cp (complexity paramter) ' értékek mellett a fákat
 *a cp érték megmutatj,a hogy mennyire szerteágató a döntési fánk
@@ -73,20 +72,12 @@ plotcp(tree_0, minline = TRUE)
 ```
 Leolvasva a 0.0077-es érték a legjobb, de ezt kitudjuk nyerni másképp is.
 (ekvivalens : tree_0$cptable)
+A cptable eredmény alapján az xerror oszlop mentén megkeressük a legkisebb értéket
+(a szűrést a pythonos dataframe szűréshez hasonlóan nyertük ki. A 4-edik oszlopból megkeressük a minimum
+értéket, erre rászűrűnk az eredeti dataframeban, majd kivesszük az első oszlopot.)
 ```{r}
 printcp(tree_0)
-```
-
-```{r}
-cp.select <- function(big.tree) {
-  min.x <- which.min(big.tree$cptable[, 4]) #column 4 is xerror
-  for(i in 1:nrow(big.tree$cptable)) {
-    if(big.tree$cptable[i, 4] < big.tree$cptable[min.x, 4] + big.tree$cptable[min.x, 5]) 
-      return(big.tree$cptable[i, 1]) #column 5: xstd, column 1: cp 
-  }
-}
-
-opt_cp = cp.select(tree_0)
+tree_0_optcp = tree_0$cptable[tree_0$cptable[,4] == min(tree_0$cptable[,4])][1]
 ```
 
                                                       Modell sokaság legyártása
