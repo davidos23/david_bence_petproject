@@ -41,6 +41,8 @@ library(GGally)
 ### Segédfüggvények definiálása
 ```{r}
 norm <- function(x) (x-min(x))/(max(x)-min(x))
+
+
 classifier <- function(x,cut_off=0.5) {
   if(x < cut_off){
     return(0)
@@ -58,7 +60,7 @@ heart <- read_csv("heart.csv")
 ```
 
 
-Dummy változók átalakítása oszlopokká, normálás
+Dummy változók átalakítása oszlopokká, normálás:
 ```{r}
 heart_kesz <- dummy_cols(heart, remove_selected_columns = TRUE)
 heart_kesz <- sapply(heart_kesz, norm) %>% data.frame()
@@ -69,25 +71,36 @@ ___________________________________________________________
 
 ###___________________________________________________________
 Train-test splites neurális háló:
-
-Adat splittelése:
+ - Neurális hálók használatához most a "caret" package-t fogjuk használni
+ - Mivel sajnos egy cross-validációs algoritmussal (train("neuralnet",trControl=trControl("cv"))) nem tudtunk elérni konvergens     megoldást, több train-test splitet alkalmazunk az optimális háló megtalálásához.
+ - 4 metrikát fogunk megtekinteni a hálók klasszifikációs teljesítményére:
+   -> Accuracy (TP + TN / TP + TN + FP + FN)
+   -> Recall (TP / TP + FN)
+   -> Precision (TP / TP + FP)
+   -> F1-mutató (2 * R * P) / (R + P)
+A legjobb háló megválasztása elsősorban Accuracy-ja alapján lesz kiválasztva, a többi metrika segédmutatóként szolgál, amennyiben  szükség van másodlagos döntőtényezőre.
+ 
+A neurális hálónk tehát a következőképpen fog kinézni:
 ```{r}
-train_index <- createDataPartition(heart_kesz$HeartDisease,p=0.8,list = FALSE)
+ANN <- neuralnet(as.factor(HeartDisease)~., data = heart_kesz_train, hidden = c(2,5), linear.output = FALSE)
+```
+
+ 
+Adatok splittelése
+Adathalmazunkat szétválasztjuk 70%-30% arányban random megválasztott indexekkel:
+```{r}
+train_index <- createDataPartition(heart_kesz$HeartDisease,p=0.7,list = FALSE)
 heart_kesz_train <- heart_kesz[train_index,]
 heart_kesz_test <- heart_kesz[-train_index,]
 ```
 
-Neurális háló:
-```{r}
-ANN <- neuralnet(HeartDisease~., data = heart_kesz_train,hidden=c(5,3),linear.output = FALSE)
-```
 
-
-Predikcio:
+Becslés:
+A következőképp végezzük a becsléseket, és konvertáljuk egy bináris vektorrá. Cut-off-nak tapasztalataink szerint jelen esetben tetszóleges 0 és 1 közötti szám megadható, a becslés rendkívül ritkánt becsül 0 vagy 1-től jelentősen különböző valószínűséget.
 ```{r}
 selected_cut_off=0.5
 #A classifier egy az elején definiált függvény, átalakítja pred-et 0-1-esekből álló vektorrá a selected_cut_off-tól függően
-pred <- predict(ANN,heart_kesz_test) %>% round(3)
+pred <- predict(ANN,heart_kesz_test)[,2] %>% round(3)
 pred <- sapply(pred,classifier,cut_off=selected_cut_off)
 ```
 
@@ -106,57 +119,135 @@ conf_matrix
 Klasszifikációs mutatók:
 ```{r}
 cfm <- confusionMatrix(data = factor(pred), reference = factor(heart_kesz_test$HeartDisease), mode = "prec_recall")
+cfm
 ```
 F1 mutató, ezt akarjuk maximalizálni:
 ```{r}
 
-cfm$overall[1]
-cfm$byClass[5]
-cfm$byClass[6]
-cfm$byClass[7]
+cfm$overall[1] #Accuracy
+cfm$byClass[5] #Precision
+cfm$byClass[6] #Recall
+cfm$byClass[7] #F1
 ```
 
 
-Átlagos F1 100 train-test-split után:
+A következőben próbáljuk megtalálni az optimális egyrétegű neurális hálót. Mivel a bemeneti neuronok száma 21, és a teljes tanuló mintanagyság 643 (0.7 * 918), ezért a paraméterek számát szeretnénk korlátozni maximum 70-80-ra. Egy 4 neuronos rejtett rétegű hálónál állunk meg (ami (21 * 4) + (4 + 4 * 2) + 2 = 78 paramétert jelent).
 
-K db különböző split futtatása, a szükséges mutatókat átlagoljuk:
+K = 100 db különböző split futtatása, n=1:4 neuronos rejtett rétegekre:
 ```{r}
 selected_cut_off=0.5 #Ez lesz a választott cut-offunk, de tapasztalatok szerint a becsült bináris adat nagyon ritkán esik túl távol 0-tól vagy 1-től, így a 0.1 vagy 0.9-es cut-off ugyanazt az eredményt nyújtja
-ANN_Accuracy = array()
-ANN_Precision = array()
-ANN_Recall = array()
-ANN_F1 = array()
+
+
+K=100
+n=4
+for (neuronszam in 1:n){
+  ANN_Accuracy = array()
+  ANN_Precision = array()
+  ANN_Recall = array()
+  ANN_F1 = array()
+  for (i in 1:K){
+    #Splittelés
+    train_index_loop <- createDataPartition(heart_kesz$HeartDisease,p=0.7,list = FALSE)
+    heart_kesz_train_loop <- heart_kesz[train_index_loop,]
+    heart_kesz_test_loop <- heart_kesz[-train_index_loop,]
+    
+    #Neurális háló tanítása
+    tryCatch({
+      ANN_looped <- neuralnet(as.factor(HeartDisease)~., data = heart_kesz_train_loop,hidden=neuronszam,linear.output = FALSE,stepmax=100000,learningrate = 0.1)
+    
+    
+    #Becslés
+    pred_loop <- predict(ANN_looped,heart_kesz_test_loop)[,2] %>% round(3)
+    pred_loop <- sapply(pred_loop,classifier,cut_off=selected_cut_off)
+  
+    
+    #Eredmények feljegyzése
+    cfm_looped <- confusionMatrix(data = factor(pred_loop), reference = factor(heart_kesz_test_loop$HeartDisease), mode = "prec_recall")
+    
+    ANN_Accuracy <- rbind(ANN_Accuracy,cfm_looped$overall[1])
+    ANN_Precision <- rbind(ANN_Precision,cfm_looped$byClass[5])
+    ANN_Recall <- rbind(ANN_Recall,cfm_looped$byClass[6])
+    ANN_F1 <- rbind(ANN_F1,cfm_looped$byClass[7])
+    },
+    error=function(e){})
+    print(cbind(i*100/K,"n =", neuronszam))
+  }
+
+  #K soros mérőszám mátrix:
+  metrics <- cbind(ANN_Accuracy,ANN_Precision, ANN_Recall, ANN_F1)[2:length(ANN_Accuracy),]
+  
+  #A K sor átlaga - egy sorvektor:
+  if (neuronszam == 1)
+  {average_metrics_1 <- apply(metrics,2,mean)}else if(neuronszam==2)
+  {average_metrics_2 <- apply(metrics,2,mean)}else if(neuronszam==3)
+  {average_metrics_3 <- apply(metrics,2,mean)}else
+  {average_metrics_4 <- apply(metrics,2,mean)}
+}
+average_metrics_1layer <- rbind(average_metrics_1,average_metrics_2,average_metrics_3,average_metrics_4)
+average_metric_1layer %>% as.data.frame()
+
+save(average_metrics_1layer,file="ANN_metrics_1layer.Rda")
+
+```
+A legpontosabb becslést az 1 rejtett rétegú neurális háló esetén az 1db neuronos rejtett rétegű háló adja.
+
+Kettő rejtett réteg esetén a legkomplexebb háló (21-3-2-2) lesz. A neuronszám keresése:
+```{r}
+selected_cut_off=0.5 #Ez lesz a választott cut-offunk, de tapasztalatok szerint a becsült bináris adat nagyon ritkán esik túl távol 0-tól vagy 1-től, így a 0.1 vagy 0.9-es cut-off ugyanazt az eredményt nyújtja
+
 
 K=50
-for (i in 1:K){
-  #Splittelés
-  train_index <- createDataPartition(heart_kesz$HeartDisease,p=0.3,list = FALSE)
-  heart_kesz_train <- heart_kesz[train_index,]
-  heart_kesz_test <- heart_kesz[-train_index,]
+n1=3
+n2=2
+for (neuronszam1 in 1:n1){
+  for (neuronszam2 in 1:n2){
+  ANN_Accuracy = array()
+  ANN_Precision = array()
+  ANN_Recall = array()
+  ANN_F1 = array()
+  for (i in 1:K){
+    #Splittelés
+    train_index_loop <- createDataPartition(heart_kesz$HeartDisease,p=0.7,list = FALSE)
+    heart_kesz_train_loop <- heart_kesz[train_index_loop,]
+    heart_kesz_test_loop <- heart_kesz[-train_index_loop,]
+    
+    #Neurális háló tanítása
+    tryCatch({
+      ANN_looped <- neuralnet(as.factor(HeartDisease)~., data = heart_kesz_train_loop,hidden=c(neuronszam1,neuronszam2),linear.output = FALSE,stepmax=100000,learningrate = 0.15)
+    
+    
+    #Becslés
+    pred_loop <- predict(ANN_looped,heart_kesz_test_loop)[,2] %>% round(3)
+    pred_loop <- sapply(pred_loop,classifier,cut_off=selected_cut_off)
   
-  #Neurális háló tanítása
-  ANN_looped <- neuralnet(HeartDisease~., data = heart_kesz_train,hidden=c(5,3),linear.output = FALSE)
+    
+    #Eredmények feljegyzése
+    cfm_looped <- confusionMatrix(data = factor(pred_loop), reference = factor(heart_kesz_test_loop$HeartDisease), mode = "prec_recall")
+    
+    ANN_Accuracy <- rbind(ANN_Accuracy,cfm_looped$overall[1])
+    ANN_Precision <- rbind(ANN_Precision,cfm_looped$byClass[5])
+    ANN_Recall <- rbind(ANN_Recall,cfm_looped$byClass[6])
+    ANN_F1 <- rbind(ANN_F1,cfm_looped$byClass[7])
+    },
+    error=function(e){})
+    print(cbind(i*100/K,"n =", neuronszam))
+  }
 
-  #Becslés
-  pred <- predict(ANN_looped,heart_kesz_test) %>% round(3)
-  pred <- sapply(pred,classifier,cut_off=selected_cut_off)
+  #K soros mérőszám mátrix:
+  metrics <- cbind(ANN_Accuracy,ANN_Precision, ANN_Recall, ANN_F1)[2:length(ANN_Accuracy),]
   
-  #Eredmények feljegyzése
-  cfm_looped <- confusionMatrix(data = factor(pred), reference = factor(heart_kesz_test$HeartDisease), mode = "prec_recall")
-  
-  ANN_Accuracy <- rbind(ANN_Accuracy,cfm_looped$overall[1])
-  ANN_Precision <- rbind(ANN_Precision,cfm_looped$byClass[5])
-  ANN_Recall <- rbind(ANN_Recall,cfm_looped$byClass[6])
-  ANN_F1 <- rbind(ANN_F1,cfm_looped$byClass[7])
-
-  
+  #A K sor átlaga - egy sorvektor:
+  if(neuronszam1==1 & neuronszam2==1)
+  {average_metrics_11 <- apply(metrics,2,mean)}else if(neuronszam1==1 & neuronszam2==2)
+  {average_metrics_12 <- apply(metrics,2,mean)}else if(neuronszam1==2 & neuronszam2==1)
+  {average_metrics_21 <- apply(metrics,2,mean)}else if(neuronszam1==2 & neuronszam2==2)
+  {average_metrics_22 <- apply(metrics,2,mean)}else if(neuronszam1==3 & neuronszam2==1)
+  {average_metrics_31 <- apply(metrics,2,mean)}else
+  {average_metrics_32 <- apply(metrics,2,mean)}
+  }
 }
-#K soros mérőszám mátrix:
-metrics <- cbind(ANN_Accuracy,ANN_Precision, ANN_Recall, ANN_F1)[2:(K+1),]
+average_metrics_2layer <- rbind(average_metrics_11,average_metrics_12,average_metrics_21,average_metrics_22,average_metrics_31,average_metrics_32)
+average_metric_2layer %>% as.data.frame()
 
-#A K sor átlaga - egy sorvektor:
-average_metrics <- apply(metrics,2,mean)
+save(average_metrics_2layer,file="ANN_metrics_2layer.Rda")
 
-metrics
-average_metrics
-```
