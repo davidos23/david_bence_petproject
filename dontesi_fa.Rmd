@@ -222,4 +222,6 @@ confusionMatrix(prediction_1, as.factor(test_data$HeartDisease))
 
  hivatkozások
  https://stats.stackexchange.com/questions/158583/what-does-node-size-refer-to-in-the-random-forest
+ http://code.env.duke.edu/projects/mget/export/HEAD/MGET/Trunk/PythonPackage/dist/TracOnlineDocumentation/Documentation/ArcGISReference/RandomForestModel.FitToArcGISTable.html
+ https://www.guru99.com/r-random-forest-tutorial.html#3
  
