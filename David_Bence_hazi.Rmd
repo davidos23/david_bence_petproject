@@ -170,7 +170,7 @@ for (neuronszam in 1:n){
     ANN_F1 <- rbind(ANN_F1,cfm_looped$byClass[7])
     },
     error=function(e){})
-    print(cbind(i*100/K,"n =", neuronszam))
+    print(paste0(i*100/K,"%, n = ", neuronszam))
   }
 
   #K soros mérőszám mátrix:
@@ -196,9 +196,11 @@ Kettő rejtett réteg esetén a legkomplexebb háló (21-3-2-2) lesz. A neuronsz
 selected_cut_off=0.5 #Ez lesz a választott cut-offunk, de tapasztalatok szerint a becsült bináris adat nagyon ritkán esik túl távol 0-tól vagy 1-től, így a 0.1 vagy 0.9-es cut-off ugyanazt az eredményt nyújtja
 
 
-K=50
+K=35
 n1=3
 n2=2
+
+
 for (neuronszam1 in 1:n1){
   for (neuronszam2 in 1:n2){
   ANN_Accuracy = array()
@@ -213,7 +215,7 @@ for (neuronszam1 in 1:n1){
     
     #Neurális háló tanítása
     tryCatch({
-      ANN_looped <- neuralnet(as.factor(HeartDisease)~., data = heart_kesz_train_loop,hidden=c(neuronszam1,neuronszam2),linear.output = FALSE,stepmax=100000,learningrate = 0.15)
+      ANN_looped <- neuralnet(as.factor(HeartDisease)~., data = heart_kesz_train_loop,hidden=c(neuronszam1,neuronszam2),linear.output = FALSE,stepmax=100000,learningrate = 0.13)
     
     
     #Becslés
@@ -230,7 +232,7 @@ for (neuronszam1 in 1:n1){
     ANN_F1 <- rbind(ANN_F1,cfm_looped$byClass[7])
     },
     error=function(e){})
-    print(cbind(i*100/K,"n =", neuronszam))
+    print(paste0(i*100/K,"%, n1 = ", neuronszam1,", n2 = ",neuronszam2))
   }
 
   #K soros mérőszám mátrix:
@@ -246,8 +248,16 @@ for (neuronszam1 in 1:n1){
   {average_metrics_32 <- apply(metrics,2,mean)}
   }
 }
-average_metrics_2layer <- rbind(average_metrics_11,average_metrics_12,average_metrics_21,average_metrics_22,average_metrics_31,average_metrics_32)
-average_metric_2layer %>% as.data.frame()
+average_metrics_2layer <- rbind(average_metrics_11,average_metrics_12,average_metrics_21,average_metrics_22,average_metrics_31,average_metrics_32) %>% as.data.frame()
 
 save(average_metrics_2layer,file="ANN_metrics_2layer.Rda")
+
+```
+
+Összekötjük eredményeinket:
+```{r}
+ann_metrics <- rbind(average_metrics_1layer,average_metrics_2layer)
+
+save(ann_metrics,file="ANN_metrics.Rda")
+```
 
