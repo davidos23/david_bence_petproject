@@ -6,6 +6,50 @@ output: html_document
 ---
 
 
+Packagek beolvasása:
+
+```{r}
+
+#dplyr ( %>% miatt)
+library(dplyr)
+
+#ANN
+library(neuralnet)
+library(nnet)
+library(fastDummies)
+library(caret)
+library(cvms)
+
+#RF
+library(randomForest)
+
+#LOGIT
+library(car)
+
+```
+
+Függvények:
+```{r}
+norm <- function(x) (x-min(x))/(max(x)-min(x))
+
+
+classifier <- function(x,cut_off=0.5) {
+  if(x < cut_off){
+    return(0)
+  } else {
+    return(1)
+  }
+}
+```
+
+Alap adat beolvasása:
+```{r}
+library(readr)
+heart <- read_csv("heart.csv")
+```
+
+
+
 Utolsó módszerként egy heterogén stacking ensemble modellt próbálunk megépíteni.
 Ennek összetevői az eddigi legjobbnak bizonyult neurális háló, és random forest modelleket fogunk használni, illetve harmadik összetevőként beleveszünk egy egyszerű logit modellt.
 
@@ -14,21 +58,24 @@ Elsőnek tekintsük meg tehát, hogyan teljesít egy logit modell ezen a sokasá
 
 ```{r}
 set.seed(2021)
-heart_with_dummies <- dummy_cols(heart, remove_selected_columns = TRUE)
-train_index <- createDataPartition(heart_with_dummies$HeartDisease,p=0.7,list = FALSE)
-heart_train <- heart_with_dummies[train_index,]
-heart_test <- heart_with_dummies[-train_index,]
+
+train_index <- createDataPartition(heart$HeartDisease,p=0.7,list = FALSE)
+heart_train <- heart[train_index,]
+heart_test <- heart[-train_index,]
 ```
 
 
 ```{r}
-logit_all <- glm(as.factor(HeartDisease)~., data=heart_train, family = binomial(link="logit"),)
+logit_all <- glm(as.factor(HeartDisease)~., data=heart, family = binomial(link="logit"),)
 library(broom)
 summary(logit_all)
 ```
+
+
+
 A GVIF mutató sehol sem túl magas (nincs 2-t meghaladó):
 ```{r}
-vif(logit_selected)
+vif(logit_all)
 ```
 
 Kidobjuk a magas p értékkel rendelkező változókat, és lefuttatjuk K = 100 db-szor a becslést, majd megnézzük a mutatóinkat:
@@ -44,10 +91,10 @@ for (i in 1:K){
   set.seed(logit_vilagallapot[i])
   
   
-  logit_selected <- glm(as.factor(HeartDisease)~Sex_F+ChestPainType_ATA+ChestPainType_NAP+ChestPainType_TA+Cholesterol+FastingBS+ExerciseAngina_Y+Oldpeak+ST_Slope_Up+ST_Slope_Flat, data=heart_train, family = binomial(link="logit"))
+  logit_selected <- glm(as.factor(HeartDisease)~Sex+ChestPainType+Cholesterol+FastingBS+ExerciseAngina+Oldpeak+ST_Slope, data=heart_train, family = binomial(link="logit"))
   
   pred_logit <- predict(logit_selected,heart_test,type="response") %>% round(3)
-  pred_logit <- sapply(pred,classifier,cut_off=selected_cut_off)
+  pred_logit <- sapply(pred_logit,classifier,cut_off=0.5)
 
   cfm_logit <- confusionMatrix(data = factor(pred_logit), reference = factor(heart_test$HeartDisease), mode = "prec_recall")
   
@@ -187,7 +234,7 @@ Futassuk le K-szor, és nézzük az átlagos mutatókat:
 Ám előtte rögzítsük a K db világállapotot. Ezek mellett fogjuk összehasonlítani a másik kettő modellhez.
 
 ```{r}
-K=50
+K=30
 vilagallapotok = sample(1:5000,K)
 ```
 
