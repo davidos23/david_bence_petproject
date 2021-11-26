@@ -1,3 +1,18 @@
+install.packages("rpart")
+install.packages("rpart.plot")
+install.packages("randomForest")
+install.packages("caret")
+install.packages("e1071")
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(caret)
+library(e1071)
+file_path <- "/Users/sbeni/suli/Reggelistat/PET-project/heart.csv"
+heart_failure <- read.csv(file_path)
+
+output = build_forest(HeartDisease, heart_failure)
+
 build_forest <- function(HeartDisease, heart_failure){
   "
   HeartDisease : ez az oszlop amit becsülni akarunk
