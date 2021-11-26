@@ -22,8 +22,7 @@ A kiválasztott adat a "heart.csv"
 
 ### Szükséges package-k betöltése
 ```{r}
-#Webscrapehez
-library(rvest)
+
 #dplyr ( %>% miatt)
 library(dplyr)
 
@@ -33,6 +32,12 @@ library(nnet)
 library(fastDummies)
 library(caret)
 library(cvms)
+
+#RF
+library(randomForest)
+
+#LOGIT
+library(car)
 
 ```
 
@@ -62,7 +67,7 @@ Dummy változók átalakítása oszlopokká, normálás:
 ```{r}
 heart_kesz <- dummy_cols(heart, remove_selected_columns = TRUE)
 heart_kesz <- sapply(heart_kesz, norm) %>% data.frame()
-heart_kesz <- heart_kesz[c("HeartDisease","Age", "RestingBP", "Cholesterol", "FastingBS", "MaxHR", "Oldpeak", "Sex_F", "Sex_M" ,  "ChestPainType_ASY", "ChestPainType_ATA", "ChestPainType_NAP", "ChestPainType_TA", "RestingECG_LVH", "RestingECG_Normal", "RestingECG_ST", "ExerciseAngina_N", "ExerciseAngina_Y", "ST_Slope_Down", "ST_Slope_Flat", "ST_Slope_Up")]
+
 ```
 
 ___________________________________________________________
@@ -325,9 +330,5 @@ cfm$byClass[7] #F1
 
 
 
-Ensemble:
-```{r}
-
-```
 
 
