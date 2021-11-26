@@ -15,7 +15,6 @@ library(dplyr)
 
 #ANN
 library(neuralnet)
-library(nnet)
 library(fastDummies)
 library(caret)
 library(cvms)

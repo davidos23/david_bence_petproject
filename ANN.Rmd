@@ -28,16 +28,9 @@ library(dplyr)
 
 #ANN
 library(neuralnet)
-library(nnet)
 library(fastDummies)
 library(caret)
 library(cvms)
-
-#RF
-library(randomForest)
-
-#LOGIT
-library(car)
 
 ```
 
