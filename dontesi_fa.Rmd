@@ -1,14 +1,9 @@
-```{r}
-#Döntési fa a heart failure adatokra
-```
-```{r}
-install.packages("rpart")
-install.packages("rpart.plot")
-install.packages("randomForest")
-library(rpart)
-library(rpart.plot)
-library(randomForest)
-```
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+
 0) Adatok jellemzése
 Az adatot a https://www.kaggle.com/fedesoriano/heart-failure-prediction címről töltöttük le.
 
@@ -25,19 +20,211 @@ A heart failure adatokat több országból gyűjtötték össze nekünk, az adat
 - régi csúcsérték (numerical) 
 - ST-görbe ?????? (kategórikus)
 - Szívbetegség - (1: beteg, 0 egészséges)
+
+Mi arra vállalkoztunk, hogy modellt építsünk a szívbetegség fennállásának eldöntésére.
+
+0) Felhasznált packagek betöltése
+```{r}
+install.packages("rpart")
+install.packages("rpart.plot")
+install.packages("randomForest")
+install.packages("caret")
+install.packages("e1071")
+library(rpart)
+library(rpart.plot)
+library(randomForest)
+library(caret)
+library(e1071)
+```
+
 1) Töltsük be az adatot!
 ```{r}
 file_path <- "/Users/sbeni/suli/Reggelistat/PET-project/heart.csv"
 heart_failure <- read.csv(file_path)
 ```
 
-2) kakken
+2) Egy fa elkészítése
 ```{r}
 decision_tree <- rpart(HeartDisease~., data=heart_failure)
 rpart.plot(decision_tree)
-prp(decision_tree)
+```
+Nézzük meg különböző 'cp (complexity paramter) ' értékek mellett a fákat
+*a cp érték megmutatj,a hogy mennyire szerteágató a döntési fánk
+
+0-ás cp mellett nagyon elágazó ábrát kapunk
+```{r}
+tree_0 <- rpart(HeartDisease~., data=heart_failure, cp=0)
+rpart.plot(tree_0)
+```
+0.01-es cp mellett a következő ábrát kapjuk. Itt már szemmel olvashatóbb a fa sűrűsége.
+```{r}
+tree_001 <- rpart(HeartDisease~., data=heart_failure, cp=0.01)
+rpart.plot(tree_001)
+```
+0.1-es cp mellett pedig gyakorlatilag csak az ST görbe alapján döntött
+```{r}
+tree_010 <- rpart(HeartDisease~., data=heart_failure, cp=0.1)
+rpart.plot(tree_010)
+```
+Használjuk föl a 'plotcp()' metódust, ami segít megtalálni az ideális cp értéket (tree_0-ra).
+```{r}
+plotcp(tree_0, minline = TRUE)
+```
+Leolvasva a 0.0077-es érték a legjobb, de ezt kitudjuk nyerni másképp is.
+(ekvivalens : tree_0$cptable)
+A cptable eredmény alapján az xerror oszlop mentén megkeressük a legkisebb értéket
+(a szűrést a pythonos dataframe szűréshez hasonlóan nyertük ki. A 4-edik oszlopból megkeressük a minimum
+értéket, erre rászűrűnk az eredeti dataframeban, majd kivesszük az első oszlopot.)
+```{r}
+printcp(tree_0)
+tree_0_optcp = tree_0$cptable[tree_0$cptable[,4] == min(tree_0$cptable[,4])][1]
 ```
 
+                                                      Modell sokaság legyártása
 
 
+Az erdő legyártásához több különböző függvényt fogunk használni. Első körben a 
+train() és trainControl() metódusokat nézzük meg. Ezek a caret csomagban találhatóak.
+Hozzunk létre egy 'tanulást segítő' objektumot, amit feltöltünk paraméterekkel és ezt továbbadjuk a függvénynek
+
+doksi: https://www.rdocumentation.org/packages/caret/versions/6.0-90/topics/trainControl
+```{r}
+train_control = trainControl(
+    method = "cv", # resampling method
+    number = 11, #node-ok száma
+    search = "grid" #a finomhangolási paraméter
+    )
+```
+A számmal megadott 0 és 1 értékeket az R numerikus oszlopnak tekinti, ezért nem engedi
+elvégezni rendesen az erdő készítését, így átnevezzük az értékeket.
+```{r}
+heart_failure["HeartDisease"][heart_failure["HeartDisease"] == 1] <- "Y"
+heart_failure["HeartDisease"][heart_failure["HeartDisease"] == 0] <- "N"
+```
+
+Kezdjük el a modellezést egy egyszerű futással:
+```{r}
+tree_default <- train(HeartDisease~.,
+    data = heart_failure,
+    method = "rf",
+    metric = "Accuracy",
+    trControl = train_control)
+print(tree_default)
+```
+
+ A legfelső sorban láthatjuk a legmagasabb Accuracy értéket, ehhez pedig az 
+ mtry = 2 tartozik, ami azt jelenti, hogy eszerint 2 változó legyen elérhető, amikor
+ egy csomópontnál vágunk. Azonban nézzük meg, hogy tudjuk - e ezt finomhangolni.
+ (fontos: futásonként változhat az optimális érték, így rögzítsük a seed-et az átláthatóság miatt)
+```{r}
+set.seed(1)
+finom_hangolas <- expand.grid(.mtry = c(1: 10))
+rf_mtry <- train(HeartDisease~.,
+    data = heart_failure,
+    method = "rf",
+    metric = "Accuracy",
+    tuneGrid = finom_hangolas,
+    trControl = train_control,
+    importance = TRUE,
+    nodesize = 10, #implicit megadja milyen mélységű lehet a fa. minimum size of terminal nodes
+    ntree = 300)
+print(rf_mtry)
+opt_mtry=rf_mtry$bestTune$mtry
+```
+ Az eredmény alapján mtry=2 tényleg a legjobb döntés volt
+ Most optimalizáljunk a maxnodes paraméterre. Itt is rögzített seed értékkel haladunk tovább
+ 
+```{r}
+store_maxnode <- list()
+tuneGrid <- expand.grid(.mtry = opt_mtry)
+for (maxnodes in c(5: 15)) {
+    set.seed(1)
+    rf_maxnode <- train(HeartDisease~.,
+        data = heart_failure,
+        method = "rf",
+        metric = "Accuracy",
+        tuneGrid = tuneGrid,
+        trControl = train_control,
+        importance = TRUE,
+        nodesize = 10,
+        maxnodes = maxnodes, #itt az iteráló elem
+        ntree = 300)
+    current_iteration <- toString(maxnodes)
+    store_maxnode[[current_iteration]] <- rf_maxnode
+}
+results_mtry <- resamples(store_maxnode)
+summary(results_mtry)
+```
+ Az adatok leolvasás után a maxnodes érték optimálisan a 13 mellett van
+ 
+```{r}
+opt_maxnode = 13
+```
+A következő lépésben iteráljuk ki a legjobb ntree-s értéket, azaz a fák számát.
+
+ 
+```{r}
+store_maxtrees <- list()
+for (ntree in c(5,10,20,30,40,50,100,200,300)) {
+    set.seed(1)
+    rf_maxtrees <- train(HeartDisease~.,
+        data = heart_failure,
+        method = "rf",
+        metric = "Accuracy",
+        tuneGrid = tuneGrid,
+        trControl = train_control,
+        importance = TRUE,
+        nodesize = 14,
+        maxnodes = opt_maxnode,
+        ntree = ntree # itt iterálunk végig
+        )
+    store_maxtrees[[toString(ntree)]] <- rf_maxtrees
+}
+results_tree <- resamples(store_maxtrees)
+summary(results_tree)
+```
+Az ideális fa szám ezek alapján a 10 lett.
+```{r}
+opt_ntree = 10
+```
+
+Elkészültek az optimális beállítások az erdőhöz, így most teszteljük azt!
+otimális fa  szám : 10
+optimális node szám : 13
+optimális mtry : 3
+
+```{r}
+vegso <- train(HeartDisease~.,
+    heart_failure,
+    method = "rf",
+    metric = "Accuracy",
+    tuneGrid = tuneGrid, #ebben van az mtry optimális értéke
+    trControl = train_control,
+    importance = TRUE,
+    nodesize = 14,
+    ntree = opt_ntree,
+    maxnodes = opt_maxnode)
+```
+
+Gyártsunk le egy teszt adatot és nézzük meg az eredményt különböző adatokon:
+```{r}
+test_data1 = heart_failure[1:300,]
+prediction_1 = predict(vegso,test_data1)
+cfm1=confusionMatrix(prediction_1, as.factor(test_data1$HeartDisease))
+print(cfm1)
+test_data2 = heart_failure[300:600,]
+prediction_2 = predict(vegso,test_data2)
+cfm2=confusionMatrix(prediction_2, as.factor(test_data2$HeartDisease))
+print(cfm2)
+test_data3 = heart_failure[600:900,]
+prediction_3 = predict(vegso,test_data3)
+cfm3=confusionMatrix(prediction_3, as.factor(test_data3$HeartDisease))
+print(cfm3)
+```
+
+ hivatkozások
+ https://stats.stackexchange.com/questions/158583/what-does-node-size-refer-to-in-the-random-forest
+ http://code.env.duke.edu/projects/mget/export/HEAD/MGET/Trunk/PythonPackage/dist/TracOnlineDocumentation/Documentation/ArcGISReference/RandomForestModel.FitToArcGISTable.html
+ https://www.guru99.com/r-random-forest-tutorial.html#3
+ https://www.rdocumentation.org/packages/randomForest/versions/4.6-14/topics/randomForest
  
