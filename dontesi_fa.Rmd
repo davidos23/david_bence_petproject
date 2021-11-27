@@ -1,8 +1,10 @@
 ---
-output:
-  html_document: default
-  pdf_document: default
+title: "Szívbetegség előrejelzése - Random Forest"
+author: "Szabó Bence Dániel, Sklovskiy David"
+date: "11/26/2021"
+output: html_document
 ---
+
 
 0) Adatok jellemzése
 Az adatot a https://www.kaggle.com/fedesoriano/heart-failure-prediction címről töltöttük le.

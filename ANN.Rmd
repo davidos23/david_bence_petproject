@@ -1,5 +1,5 @@
 ---
-title: "Ingatlan piac elemzés"
+title: "Szívbetegség előrejelzése"
 author: "Szabó Bence Dániel, Sklovskiy David"
 date: "11/20/2021"
 output: html_document

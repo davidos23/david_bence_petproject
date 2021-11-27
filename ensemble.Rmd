@@ -1,5 +1,5 @@
 ---
-title: "ensemble"
+title: "Szívbetegség előrejelzése - Ensemble"
 author: "Szabó Bence Dániel, Sklovskiy David"
 date: "11/26/2021"
 output: html_document
