@@ -4,7 +4,7 @@ author: "Szabó Bence Dániel, Sklovskiy David"
 date: "11/26/2021"
 output: html_document
 ---
-
+Első lépésben véletlen erdőt építünk az adatból, amelyet ebben a fileban ismertetünk a feladatmegoldáshoz
 
 0) Adatok jellemzése
 Az adatot a https://www.kaggle.com/fedesoriano/heart-failure-prediction címről töltöttük le.
@@ -223,6 +223,8 @@ prediction_3 = predict(vegso,test_data3)
 cfm3=confusionMatrix(prediction_3, as.factor(test_data3$HeartDisease))
 print(cfm3)
 ```
+
+A következő lépésben az ANN által épített modellt nézzük meg. Ehhez váltsunk át az ANN.Rmd markdown filera.
 
  hivatkozások
  https://stats.stackexchange.com/questions/158583/what-does-node-size-refer-to-in-the-random-forest
