@@ -10,17 +10,17 @@ Első lépésben véletlen erdőt építünk az adatból, amelyet ebben a fileba
 Az adatot a https://www.kaggle.com/fedesoriano/heart-failure-prediction címről töltöttük le.
 
 A heart failure adatokat több országból gyűjtötték össze nekünk, az adatstruktúra pedig 12 oszlopból áll. Nevesen
-- életkor(numerikus)
-- nem (M: male, F: female)
-- mellkasi fájdalom típusa (kategórikus)
-- nyugalmi vérnyomás (numerikus)
-- koleszterin mennyisége (numerikus)
-- éhomi vércukorszint (0-1)
-- nyugalmi elektrodiogram eredménye (kategórikus)
-- maximális szívdobbanás (numerikus)
+- Életkor(numerikus)
+- Nem (M: male, F: female)
+- Mellkasi fájdalom típusa (kategórikus)
+- Nyugalmi vérnyomás (numerikus)
+- Koleszterol mennyisége (numerikus)
+- Éhgyomor vércukorszint (0-1)
+- Nyugalmi elektrodiogram eredménye (kategórikus)
+- Maximális szívdobbanás (numerikus)
 - Szív-koszorúér fájdalom mozgás hatására (0-1)
-- régi csúcsérték (numerical) 
-- ST-görbe ?????? (kategórikus)
+- Sinus tachycardia csúcsértéke (numerical) 
+- ST-görbe lejtése (kategórikus)
 - Szívbetegség - (1: beteg, 0 egészséges)
 
 Mi arra vállalkoztunk, hogy modellt építsünk a szívbetegség fennállásának eldöntésére.
