@@ -5,22 +5,10 @@ date: "11/20/2021"
 output: html_document
 ---
 
-## ________________________________________
-## Menetrend:
-1. Adat leszedése, tisztítása
-2. Három módszer alkalmazása:
-  a. ANN
-  b. Véletlen erdők
-  c. Ensemble módszer
-3.Összehasonlítás
 
-Cél: pontosan megbecsülni a szívbetegeket a produkált tünetek alapján.
+Random Forest után most folytassuk a neurális hálló modellünk felépítésével!
 
-### Adat kiválasztása
-A kiválasztott adat a "heart.csv"
-
-
-### Szükséges package-k betöltése
+Szükséges package-k betöltése
 ```{r}
 
 #dplyr ( %>% miatt)
@@ -34,7 +22,7 @@ library(cvms)
 
 ```
 
-### Segédfüggvények definiálása
+Segédfüggvények definiálása
 ```{r}
 norm <- function(x) (x-min(x))/(max(x)-min(x))
 
@@ -49,7 +37,7 @@ classifier <- function(x,cut_off=0.5) {
 ```
 
 
-### Adat betöltése:
+Adat betöltése:
 ```{r}
 library(readr)
 heart <- read_csv("heart.csv")
@@ -68,7 +56,7 @@ ___________________________________________________________
 ###___________________________________________________________
 Train-test splites neurális háló:
  - Neurális hálók használatához most a "caret" package-t fogjuk használni
- - Mivel sajnos egy cross-validációs algoritmussal (train("neuralnet",trControl=trControl("cv"))) nem tudtunk elérni konvergens     megoldást, több train-test splitet alkalmazunk az optimális háló megtalálásához.
+ - Mivel sajnos egy cross-validációs algoritmussal (train("neuralnet",trControl=trControl("cv"))) nem tudtunk elérni konvergens megoldást, több train-test splitet alkalmazunk az optimális háló megtalálásához.
  - 4 metrikát fogunk megtekinteni a hálók klasszifikációs teljesítményére:
    -> Accuracy (TP + TN / TP + TN + FP + FN)
    -> Recall (TP / TP + FN)
@@ -117,7 +105,7 @@ Klasszifikációs mutatók:
 cfm <- confusionMatrix(data = factor(pred), reference = factor(heart_kesz_test$HeartDisease), mode = "prec_recall")
 cfm
 ```
-F1 mutató, ezt akarjuk maximalizálni:
+Az alábbi mutatókat szeretnénk maximalizálni, de accuracy-t előnyben részesítjük:
 ```{r}
 
 cfm$overall[1] #Accuracy
@@ -322,6 +310,6 @@ cfm$byClass[7] #F1
 
 
 
-
+Most menjünk tovább az Ensemble módszer felépítésére!
 
 

@@ -5,7 +5,6 @@ date: "11/26/2021"
 output: html_document
 ---
 
-
 Packagek beolvasása:
 
 ```{r}
@@ -50,7 +49,7 @@ heart <- read_csv("heart.csv")
 
 
 Utolsó módszerként egy heterogén stacking ensemble modellt próbálunk megépíteni.
-Ennek összetevői az eddigi legjobbnak bizonyult neurális háló, és random forest modelleket fogunk használni, illetve harmadik összetevőként beleveszünk egy egyszerű logit modellt.
+Ennek összetevőiként az eddigi legjobbnak bizonyult neurális háló, és random forest modelleket fogjuk használni, illetve harmadik összetevőként beleveszünk egy egyszerű logit modellt.
 
 
 Elsőnek tekintsük meg tehát, hogyan teljesít egy logit modell ezen a sokaságon.
@@ -77,7 +76,7 @@ A GVIF mutató sehol sem túl magas (nincs 2-t meghaladó):
 vif(logit_all)
 ```
 
-Kidobjuk a magas p értékkel rendelkező változókat, és lefuttatjuk K = 100 db-szor a becslést, majd megnézzük a mutatóinkat:
+Kidobjuk a magas p-értékkel rendelkező változókat (marad: nem, mellkasi fájdalom fajtája, koleszterol szint, vércukor szint, fizikai aktivitás indukálta angina, sinus tachycardia csúcsossága, mértéke), és lefuttatjuk K = 100 db-szor a becslést, majd megnézzük a mutatóinkat:
 ```{r}
 K=1000
 logit_vilagallapot = sample(1,10000,K)
@@ -111,11 +110,11 @@ metrics_logit <- cbind(logit_Accuracy,logit_Precision, logit_Recall, logit_F1)[2
 
 average_metrics_logit <- apply(metrics_logit,2,mean)
 
-as.data.frame(average_metrics_logit)
+average_metrics_logit
 ```
 
 
-Nem túl erősek a mutatók (59%-os pontosság).
+Nem túl erősek a mutatók (kb. 60%-os pontosság).
 
 Készítsünk egy stacking ensemble modellt (manuálisan)!
 __________________________________________________________________________________
@@ -233,7 +232,7 @@ Futassuk le K-szor, és nézzük az átlagos mutatókat:
 Ám előtte rögzítsük a K db világállapotot. Ezek mellett fogjuk összehasonlítani a másik kettő modellhez.
 
 ```{r}
-K=30
+K=100
 vilagallapotok = sample(1:5000,K)
 ```
 
