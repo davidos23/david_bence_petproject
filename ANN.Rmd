@@ -1,5 +1,5 @@
 ---
-title: "Szívbetegség előrejelzése"
+title: "Szívbetegség előrejelzése - ANN"
 author: "Szabó Bence Dániel, Sklovskiy David"
 date: "11/20/2021"
 output: html_document
